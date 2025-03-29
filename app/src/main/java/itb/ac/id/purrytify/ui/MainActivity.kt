@@ -1,4 +1,4 @@
-package itb.ac.id.purrytify
+package itb.ac.id.purrytify.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

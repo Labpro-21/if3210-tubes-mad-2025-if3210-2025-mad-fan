@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="MySplashScreen" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/black_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="postSplashScreenTheme">@style/PurrytifyTheme</item>
+    </style>
+    <style name="PurrytifyTheme" parent="Theme.Material3.DayNight.NoActionBar"/>
+
+
+</resources>

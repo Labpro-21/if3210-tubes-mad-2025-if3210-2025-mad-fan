@@ -21,9 +21,11 @@ object RetrofitClient {
         return tokenManager ?: throw IllegalStateException("TokenManager is not initialized.")
     }
 
-    private val client = OkHttpClient.Builder()
-        .addInterceptor(AuthInterceptor(getTokenManager()))
-        .build()
+    private val client: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(getTokenManager()))
+            .build()
+    }
 
     val api: ApiService by lazy {
         Retrofit.Builder()

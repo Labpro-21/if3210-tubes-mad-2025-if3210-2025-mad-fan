@@ -6,7 +6,7 @@ import itb.ac.id.purrytify.data.api.RetrofitClient
 class PurrytifyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        RetrofitClient.init(this)
+        RetrofitClient.init(applicationContext)
 
         // Initialize any libraries or components here
         // For example, if you're using Timber for logging:

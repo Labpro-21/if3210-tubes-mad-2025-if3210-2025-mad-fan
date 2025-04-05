@@ -6,8 +6,9 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
 import kotlinx.coroutines.flow.first
+import javax.inject.Inject
 
-class TokenManager(context: Context) {
+class TokenManager @Inject constructor(private val context: Context) {
     private val dataStore = PreferenceDataStoreFactory.create {
         context.preferencesDataStoreFile("auth_store")
     }

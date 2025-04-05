@@ -1,13 +1,15 @@
 package itb.ac.id.purrytify.data.repository
 
 import itb.ac.id.purrytify.data.api.ApiService
-import itb.ac.id.purrytify.data.api.RetrofitClient
+//import itb.ac.id.purrytify.data.api.RetrofitClient
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.model.LoginRequest
+import javax.inject.Inject
 
-class AuthRepository {
-    private val authApi = RetrofitClient.api
-    private val tokenManager = RetrofitClient.getTokenManager()
+class AuthRepository @Inject constructor(
+    private val authApi: ApiService,
+    private val tokenManager: TokenManager
+) {
     suspend fun login(email: String, password: String): Result<Unit> {
         return try {
             val response = authApi.login(LoginRequest(email, password))

@@ -1,10 +1,11 @@
 package itb.ac.id.purrytify.data.repository
 import itb.ac.id.purrytify.data.api.ApiService
-import itb.ac.id.purrytify.data.api.RetrofitClient
 import itb.ac.id.purrytify.data.model.ProfileResponse
+import javax.inject.Inject
 
-class UserRepository{
-    private val apiService: ApiService = RetrofitClient.api
+class UserRepository @Inject constructor(
+    private val apiService: ApiService
+){
     suspend fun getProfile(): ProfileResponse {
         return try {
             val response = apiService.getProfile()

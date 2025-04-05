@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.tooling.preview.*
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.lifecycleScope
@@ -164,8 +165,23 @@ fun LoginScreen(
                 }
                 when (loginState) {
                     is LoginState.Loading ->
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                        Dialog(onDismissRequest = {}) {
+                            Surface(
+                                modifier = Modifier
+                                    .size(150.dp)
+                                    .padding(8.dp),
+                                shape = MaterialTheme.shapes.medium,
+                                color = Color.White,
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
                         }
                     is LoginState.Error -> {
                         val message = (loginState as LoginState.Error).message

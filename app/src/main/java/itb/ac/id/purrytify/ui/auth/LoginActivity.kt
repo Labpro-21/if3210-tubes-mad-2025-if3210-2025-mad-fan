@@ -155,16 +155,19 @@ fun LoginScreen(
             }
             when (loginState) {
                 is LoginState.Loading -> CircularProgressIndicator()
-                is LoginState.Error -> AlertDialog(
-                    onDismissRequest = { viewModel.resetLoginState()},
-                    title = { Text("Login Failed") },
-                    text = { Text("Email or password is incorrect.") },
-                    confirmButton = {
-                        Button(onClick = { viewModel.resetLoginState() }) {
-                            Text("OK")
+                is LoginState.Error -> {
+                    val message = (loginState as LoginState.Error).message
+                    AlertDialog(
+                        onDismissRequest = { viewModel.resetLoginState() },
+                        title = { Text("Login Failed") },
+                        text = { Text(message) },
+                        confirmButton = {
+                            Button(onClick = { viewModel.resetLoginState() }) {
+                                Text("OK")
+                            }
                         }
-                    }
-                )
+                    )
+                }
                 is LoginState.Success -> {}
                 is LoginState.Idle -> {}
             }

@@ -20,37 +20,38 @@ import androidx.lifecycle.lifecycleScope
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.compose.material3.Surface
+import itb.ac.id.purrytify.ui.home.HomeFragment
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // enableEdgeToEdge() // Biar aplikasi penuh sampe ke status bar
+
         setContent {
             PurrytifyTheme {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
-                ) {
-                    Greeting("Android", Modifier.padding(16.dp))
-
-
-                }
+                PurrytifyApp()
             }
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun PurrytifyApp() {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        // Sekarang home di sini dulu
+        // nanti diganti sama navigasi realnya
+        HomeFragment()
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun PurrytifyAppPreview() {
     PurrytifyTheme {
-        Greeting("Android")
+        PurrytifyApp()
     }
 }

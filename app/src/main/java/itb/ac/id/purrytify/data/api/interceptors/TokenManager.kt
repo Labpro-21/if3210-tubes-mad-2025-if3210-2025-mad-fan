@@ -1,9 +1,7 @@
 package itb.ac.id.purrytify.data.api.interceptors
 
 import android.content.Context
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.*
 import androidx.datastore.preferences.preferencesDataStoreFile
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
@@ -14,6 +12,16 @@ class TokenManager @Inject constructor(private val context: Context) {
     }
     private val accessToken = stringPreferencesKey("access_token")
     private val refreshToken = stringPreferencesKey("refresh_token")
+//    private val isLoggedIn = booleanPreferencesKey("is_logged_in")
+
+//    suspend fun isLoggedIn(): Boolean {
+//        return dataStore.data.first()[isLoggedIn] ?: false
+//    }
+//    suspend fun setLoggedIn(loggedIn: Boolean) {
+//        dataStore.edit { preferences ->
+//            preferences[isLoggedIn] = loggedIn
+//        }
+//    }
 
     suspend fun getAccessToken(): String {
         return dataStore.data.first()[accessToken] ?: ""

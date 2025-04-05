@@ -80,6 +80,8 @@ dependencies {
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.work)
+    kapt(libs.hilt.ext.compiler)
 
     // Room Database
     implementation(libs.androidx.room.runtime)
@@ -98,6 +100,7 @@ dependencies {
     // Media & Background Tasks
     implementation(libs.androidx.media)
     implementation(libs.androidx.work.runtime.ktx)
+
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)

@@ -1,9 +1,12 @@
 package itb.ac.id.purrytify.data.repository
 
+import android.util.Log
 import itb.ac.id.purrytify.data.api.ApiService
 //import itb.ac.id.purrytify.data.api.RetrofitClient
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.model.LoginRequest
+import itb.ac.id.purrytify.data.model.RefreshResponse
+import retrofit2.Response
 import javax.inject.Inject
 
 class AuthRepository @Inject constructor(
@@ -15,7 +18,8 @@ class AuthRepository @Inject constructor(
             val response = authApi.login(LoginRequest(email, password))
             if (response.isSuccessful) {
                 response.body()?.let { tokenManager.saveAccessToken(it.token) }
-                response.body()?.let { tokenManager.saveRefreshToken(it.refresh) }
+//                response.body()?.let { tokenManager.saveRefreshToken(it.refresh) }
+//                tokenManager.setLoggedIn(true)
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed"))
@@ -27,33 +31,24 @@ class AuthRepository @Inject constructor(
 
     suspend fun logout() {
         tokenManager.clearToken()
+//        tokenManager.setLoggedIn(false)
     }
 
-    suspend fun refreshToken(): Result<Unit> {
-        return try {
+    suspend fun refreshToken(): Response<RefreshResponse> {
             val refreshToken = tokenManager.getRefreshToken()
             val response = authApi.refreshToken(refreshToken)
             if (response.isSuccessful) {
                 response.body()?.let { tokenManager.saveAccessToken(it.token) }
-                Result.success(Unit)
+                return response
             } else {
-                Result.failure(Exception("Refresh token failed"))
+                return  response
             }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
     }
 
-    suspend fun verifyToken(): Result<Unit> {
-        return try {
-            val response = authApi.verifyToken()
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception("Token verification failed"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun verifyToken(): Response<Unit> {
+        return authApi.verifyToken()
     }
+//    suspend fun isLoggedIn(): Boolean {
+//        return tokenManager.isLoggedIn()
+//    }
 }

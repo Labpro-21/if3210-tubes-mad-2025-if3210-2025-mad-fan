@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("dagger.hilt.android.plugin")
     kotlin("kapt")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlin-parcelize")
@@ -50,55 +51,59 @@ android {
 }
 
 dependencies {
-    // Core dependencies
+    // Core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.appcompat.resources)
     implementation(libs.androidx.core.splashscreen)
 
-    // Compose dependencies
-    implementation(libs.androidx.activity.compose)
+    // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.constraintlayout.compose)
-    implementation("com.google.android.material:material:1.12.0")
+    implementation(libs.material)
+    implementation(libs.androidx.material.icons.extended)
 
-    // Compose Navigation
-    implementation("androidx.navigation:navigation-compose:2.7.5")
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
 
-    // ViewModel with Compose
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.2")
+    // Lifecycle
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Dependency Injection - Hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Room Database
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    kapt("androidx.room:room-compiler:2.6.1")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    kapt(libs.androidx.room.compiler)
 
-    // Retrofit & OkHttp for API calls
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    // Networking - Retrofit & OkHttp
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.logging.interceptor)
 
-    // Coil for image loading (preferred for Compose)
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    // Image Loading
+    implementation(libs.coil.compose)
 
-    // Media Player
-    implementation("androidx.media:media:1.7.0")
-
-    // WorkManager for background tasks
-    implementation("androidx.work:work-runtime-ktx:2.8.1")
+    // Media & Background Tasks
+    implementation(libs.androidx.media)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation(libs.kotlinx.coroutines.android)
 
-    // DataStore for token storage
-    implementation("androidx.datastore:datastore-preferences:1.1.0")
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
 
     // Testing
     testImplementation(libs.junit)
@@ -108,4 +113,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+}
+
+kapt {
+    correctErrorTypes = true
 }

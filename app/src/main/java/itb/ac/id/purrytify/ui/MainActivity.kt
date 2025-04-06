@@ -22,6 +22,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.material3.Surface
 import itb.ac.id.purrytify.ui.home.HomeFragment
+import androidx.navigation.compose.rememberNavController
+import itb.ac.id.purrytify.ui.navigation.MainScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,13 +40,12 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PurrytifyApp() {
+    val navController = rememberNavController()
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
-        // Sekarang home di sini dulu
-        // nanti diganti sama navigasi realnya
-        HomeFragment()
+        MainScreen(navController = navController)
     }
 }
 

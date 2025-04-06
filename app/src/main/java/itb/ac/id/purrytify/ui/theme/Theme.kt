@@ -54,7 +54,7 @@ fun PurrytifyTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = PurrytifyTypography,
         content = content
     )
 }

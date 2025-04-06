@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.material)
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.ui.text.google.fonts)
 
     // Navigation
     implementation(libs.androidx.navigation.compose)

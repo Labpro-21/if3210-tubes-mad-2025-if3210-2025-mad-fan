@@ -29,11 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
@@ -59,8 +57,7 @@ fun HomeContent() {
         Text(
             text = "New songs",
             color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -80,8 +77,7 @@ fun HomeContent() {
         Text(
             text = "Recently played",
             color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -124,8 +120,7 @@ fun NewSongItem(song: Song) {
         Text(
             text = song.title,
             color = MaterialTheme.colorScheme.onBackground,
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.titleSmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -134,7 +129,7 @@ fun NewSongItem(song: Song) {
         Text(
             text = song.artist,
             color = MaterialTheme.colorScheme.tertiary,
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -161,7 +156,6 @@ fun RecentlyPlayedItem(song: Song) {
 
         Spacer(modifier = Modifier.width(12.dp))
 
-
         Column(
             modifier = Modifier.weight(1f)
         ) {
@@ -169,8 +163,7 @@ fun RecentlyPlayedItem(song: Song) {
             Text(
                 text = song.title,
                 color = MaterialTheme.colorScheme.onBackground,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -178,7 +171,7 @@ fun RecentlyPlayedItem(song: Song) {
             Text(
                 text = song.artist,
                 color = MaterialTheme.colorScheme.tertiary,
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

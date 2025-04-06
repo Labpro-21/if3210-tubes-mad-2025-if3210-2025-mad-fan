@@ -76,6 +76,7 @@ dependencies {
     // Lifecycle
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.fragment.ktx)
 
     // Dependency Injection - Hilt
     implementation(libs.hilt.android)

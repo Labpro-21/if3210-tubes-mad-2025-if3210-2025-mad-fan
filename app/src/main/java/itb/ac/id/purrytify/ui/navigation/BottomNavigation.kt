@@ -23,6 +23,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.graphics.Color
+import itb.ac.id.purrytify.ui.profile.ProfileContent
+import itb.ac.id.purrytify.ui.profile.ProfileUiState
 
 @Composable
 fun MainScreen(navController: NavHostController) {
@@ -52,7 +54,14 @@ fun NavigationGraph(navController: NavHostController) {
 //            LibraryFragment() // Nanti nyalain kalau udah jadi
         }
         composable(NavigationItem.Profile.route) {
-            ProfileFragment()
+//            Dummy untuk preview
+            val dummyProfileState = ProfileUiState(
+                username = "13522001",
+                location = "Indonesia"
+            )
+
+            ProfileContent(profileState = dummyProfileState)
+//            ProfileFragment()
         }
     }
 }

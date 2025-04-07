@@ -217,13 +217,14 @@ fun PasswordTextField(password: String, onPasswordChange : (String) -> Unit) {
         singleLine = true,
         placeholder = { Text("Password", color = MaterialTheme.colorScheme.secondary) },
         colors = TextFieldDefaults.colors(
-
             focusedContainerColor = MaterialTheme.colorScheme.surface,
             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
             cursorColor = MaterialTheme.colorScheme.onSurface,
-
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
         ),
         modifier = Modifier
             .fillMaxWidth(),
@@ -258,7 +259,10 @@ fun EmailTextField(email: String, onEmailChange: (String) -> Unit){
             focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
             cursorColor = MaterialTheme.colorScheme.onSurface,
-        )
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+        ),
     )
 }
 

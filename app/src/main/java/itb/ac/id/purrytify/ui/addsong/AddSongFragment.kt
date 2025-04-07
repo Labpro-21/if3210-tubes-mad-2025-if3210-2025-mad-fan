@@ -1,5 +1,6 @@
 package itb.ac.id.purrytify.ui.addsong
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,12 +19,14 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
+import itb.ac.id.purrytify.utils.MediaMetadataUtil.Companion.extractMetadata
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,18 +37,38 @@ fun AddSongScreen(onDismiss: () -> Unit, onSave: () -> Unit){
     var songUri by remember { mutableStateOf<Uri?>(null) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
 
+    val context = LocalContext.current
     val photoPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
-        photoUri = uri
+        if (uri != null){
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            photoUri = uri
+        }
     }
 
     val audioPicker = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
-        songUri = uri
+        if (uri != null){
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            songUri = uri
+        }
     }
-
+    val song = songUri?.let { extractMetadata(context, it) }
+    if (song != null) {
+        song.imagePath = photoUri.toString()
+    }
+    if (song != null) {
+        title = song.title
+        artist = song.artist
+    }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
         Column(
             modifier = Modifier
@@ -151,6 +174,12 @@ fun AddSongScreen(onDismiss: () -> Unit, onSave: () -> Unit){
                 Button(
                     onClick = {
                         // Handle save action
+                        if (song != null) {
+                            song.title = title
+                            song.artist = artist
+                            song.imagePath = photoUri.toString()
+                        }
+
                         onSave()
                     },
                     modifier = Modifier.align(Alignment.CenterVertically)

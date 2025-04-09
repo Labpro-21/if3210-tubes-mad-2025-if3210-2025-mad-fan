@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="MySplashScreen" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/black_background</item>
+    <style name="MySplashScreen" parent="Theme.Material3.DayNight">
+        <item name="windowSplashScreenBackground">@color/BlackBackground</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="postSplashScreenTheme">@style/PurrytifyTheme</item>
+        <item name="postSplashScreenTheme">@style/Theme.Purrytify</item>
     </style>
-    <style name="PurrytifyTheme" parent="Theme.Material3.DayNight.NoActionBar"/>
-
-
-</resources>
+    <style name="Theme.Purrytify" parent="Theme.Material3.DayNight">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionModeOverlay">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style></resources>

@@ -1,4 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="black_background" type="color">#121212</item>
+    <!-- Main Theme Colors -->
+    <color name="BlackBackground">#FF121212</color>
+    <color name="WhiteFont">#FFFFFFFF</color>
+    <color name="SpotifyGreen">#FF1DB954</color>
+    <color name="Grey13">#FF212121</color>
+    <color name="DavyGrey">#FF535353</color>
+    <color name="Grey70">#FFB3B3B3</color>
+
+    <!-- Purple/Pink Color Set -->
+    <color name="Purple80">#FFD0BCFF</color>
+    <color name="PurpleGrey80">#FFCCC2DC</color>
+    <color name="Pink80">#FFEFB8C8</color>
+
+    <color name="Purple40">#FF6650A4</color>
+    <color name="PurpleGrey40">#FF625B71</color>
+    <color name="Pink40">#FF7D5260</color>
 </resources>

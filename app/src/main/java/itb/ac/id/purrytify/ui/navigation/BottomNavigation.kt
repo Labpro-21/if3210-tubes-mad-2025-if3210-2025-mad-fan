@@ -1,5 +1,6 @@
 package itb.ac.id.purrytify.ui.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,6 +24,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import itb.ac.id.purrytify.ui.library.LibraryScreen
 import itb.ac.id.purrytify.ui.profile.ProfileContent
 import itb.ac.id.purrytify.ui.profile.ProfileUiState
 
@@ -51,7 +54,8 @@ fun NavigationGraph(navController: NavHostController) {
             HomeFragment()
         }
         composable(NavigationItem.Library.route) {
-//            LibraryFragment() // Nanti nyalain kalau udah jadi
+            LibraryScreen()
+
         }
         composable(NavigationItem.Profile.route) {
 //            Dummy untuk preview
@@ -61,6 +65,7 @@ fun NavigationGraph(navController: NavHostController) {
             )
 
             ProfileContent(profileState = dummyProfileState)
+
 //            ProfileFragment()
         }
     }

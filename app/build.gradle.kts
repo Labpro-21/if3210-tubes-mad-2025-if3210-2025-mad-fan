@@ -43,6 +43,7 @@ android {
 
     buildFeatures {
         compose = true
+        viewBinding = true
     }
 
     composeOptions {
@@ -118,6 +119,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // Glide
+    implementation(libs.glide)
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 }
 
 kapt {

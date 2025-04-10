@@ -318,7 +318,7 @@ fun AddSongScreenPreview() {
     PurrytifyTheme {
         Scaffold(
             floatingActionButton = {
-                FloatingActionButton(onClick = { showSheet = true }) {
+                FloatingActionButton(onClick = { showSheet = false }) {
                     Icon(Icons.Default.Add, contentDescription = "Add")
                 }
             }

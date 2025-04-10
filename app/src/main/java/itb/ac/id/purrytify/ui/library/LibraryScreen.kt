@@ -24,19 +24,23 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.ViewCompat.generateViewId
 import androidx.fragment.app.FragmentContainerView
 import androidx.fragment.app.commit
+import androidx.hilt.navigation.compose.hiltViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.addsong.AddSongScreen
+import itb.ac.id.purrytify.ui.addsong.AddSongViewModel
 
 @Composable
 fun LibraryScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val fragmentManager = (context as AppCompatActivity).supportFragmentManager
     val viewId = remember { View.generateViewId() }
-    var showSheet by remember { mutableStateOf(true) }
+    val addSongViewModel: AddSongViewModel = hiltViewModel()
+    val libraryViewModel: LibraryViewModel = hiltViewModel()
+    var showSheet by remember { mutableStateOf(false) }
     PurrytifyTheme {
         Column(modifier = modifier.fillMaxSize()) {
-            // Top bar with title and button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -59,11 +63,10 @@ fun LibraryScreen(modifier: Modifier = Modifier) {
                 }
             }
 
-            // Fragment container fills the rest
             AndroidView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f), // 👈 fills remaining space
+                    .weight(1f),
                 factory = { ctx ->
                     FragmentContainerView(ctx).apply {
                         id = viewId
@@ -71,8 +74,6 @@ fun LibraryScreen(modifier: Modifier = Modifier) {
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT
                         )
-                        // Optional: add temp debug color
-                        setBackgroundColor(android.graphics.Color.RED)
                     }
                 },
                 update = { containerView ->
@@ -91,6 +92,7 @@ fun LibraryScreen(modifier: Modifier = Modifier) {
                 AddSongScreen(
                     onDismiss = { showSheet = false },
                     onSave = { showSheet = false },
+                    viewModel = addSongViewModel
                 )
             }
         }

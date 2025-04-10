@@ -2,6 +2,7 @@ package itb.ac.id.purrytify.ui.addsong
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.*
@@ -24,10 +25,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
-import itb.ac.id.purrytify.utils.MediaMetadataUtil.Companion.extractMetadata
+import itb.ac.id.purrytify.utils.AddSongUtil.Companion.extractMetadata
+import itb.ac.id.purrytify.utils.AddSongUtil.Companion.getFileName
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +41,7 @@ fun AddSongScreen(
 ) {
     var title by remember { mutableStateOf("") }
     var artist by remember { mutableStateOf("") }
+    var songFileName by remember { mutableStateOf("Upload File") }
 
     var songUri by remember { mutableStateOf<Uri?>(null) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
@@ -74,6 +78,7 @@ fun AddSongScreen(
             song = extractMetadata(context, it)
             title = song?.title ?: ""
             artist = song?.artist ?: ""
+            songFileName = getFileName(context, it)
         }
     }
 
@@ -109,11 +114,11 @@ fun AddSongScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                UploadBox(R.drawable.upload_file, "Upload File") {
+                UploadBoxFile(songFileName) {
                     audioPicker.launch(arrayOf("audio/*"))
                 }
 
-                UploadBox(R.drawable.upload_photo, "Upload Photo") {
+                UploadBoxPhoto(selectedImage = photoUri) {
                     photoPicker.launch(arrayOf("image/*"))
                 }
             }
@@ -208,7 +213,11 @@ fun AddSongScreen(
                             it.imagePath = photoUri?.toString() ?: ""
                             viewModel?.saveAddSong(it)
                         }
-                        onSave()
+                        if (songUri != null && photoUri != null) {
+                            onSave()
+                        } else {
+                            Toast.makeText(context, "Please Upload a Song and Artwork", Toast.LENGTH_LONG).show()
+                        }
                     },
                     modifier = Modifier
                         .align(Alignment.CenterVertically)
@@ -223,7 +232,7 @@ fun AddSongScreen(
 
 
 @Composable
-fun UploadBox (iconName: Int, title: String, onClick: () -> Unit) {
+fun UploadBoxFile (title:String = "Upload File", onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .width(120.dp)
@@ -255,22 +264,19 @@ fun UploadBox (iconName: Int, title: String, onClick: () -> Unit) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            val imgPadding = if (title == "Upload File") 0.dp else 5.dp
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.tertiary,
                 modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(bottom = imgPadding),
+                    .align(Alignment.CenterHorizontally),
             )
-            val imgSize = if (title == "Upload File") 80.dp else 60.dp
             Image(
-                painter = painterResource(id = iconName),
+                painter = painterResource(id = R.drawable.upload_file),
                 contentDescription = "Upload Icon",
                 modifier = Modifier
-                    .size(imgSize)
+                    .size(80.dp)
                     .padding(top = 16.dp)
                     .align(Alignment.CenterHorizontally),
             )
@@ -295,6 +301,88 @@ fun UploadBox (iconName: Int, title: String, onClick: () -> Unit) {
 }
 
 @Composable
+fun UploadBoxPhoto (selectedImage: Uri?, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(120.dp)
+            .height(120.dp)
+            .clip(RoundedCornerShape(4.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .clickable(
+                onClick = onClick,
+            ),
+        contentAlignment = Alignment.Center,
+    ){
+        if (selectedImage == null) {
+            Box(
+                modifier = Modifier
+                    .drawBehind {
+                        drawRoundRect(
+                            color = Color(0xff535353),
+                            size = size,
+                            cornerRadius = CornerRadius(10f, 10f),
+                            style = Stroke(width = 5f,
+                                pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+                            ))
+                    }
+                    .size(110.dp)
+            )
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(if (selectedImage == null) 16.dp else 0.dp)
+        ) {
+            if (selectedImage == null) {
+                Text(
+                    text = "Upload Photo",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom=5.dp),
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.upload_photo),
+                    contentDescription = "Upload Icon",
+                    modifier = Modifier
+                        .size(60.dp)
+                        .padding(top = 16.dp)
+                        .align(Alignment.CenterHorizontally),
+                )
+            } else {
+                AsyncImage(
+                    model = selectedImage,
+                    contentDescription = "Selected Image",
+                    modifier = Modifier
+                        .size(120.dp, 120.dp)
+                        .align(Alignment.CenterHorizontally),
+                )
+            }
+        }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .background(MaterialTheme.colorScheme.onSurface, shape = RoundedCornerShape(20))
+                    .size(16.dp)
+            ){
+                Image(
+                    painter = painterResource(id = R.drawable.ic_edit),
+                    contentDescription = "Edit Icon",
+                    modifier = Modifier
+                        .size(14.dp)
+                        .padding(2.dp)
+                        .align(Alignment.Center),
+
+                    )
+            }
+    }
+}
+
+@Composable
 @Preview(showBackground = true)
 fun UploadBoxPreview() {
     PurrytifyTheme {
@@ -304,8 +392,8 @@ fun UploadBoxPreview() {
             modifier = Modifier.fillMaxWidth()
                 .padding(16.dp)
         ) {
-            UploadBox(R.drawable.upload_file, "Upload File", {})
-            UploadBox(R.drawable.upload_photo, "Upload Photo", {})
+            UploadBoxFile("Upload File"){}
+            UploadBoxPhoto(null){}
         }
     }
 }

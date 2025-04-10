@@ -2,13 +2,14 @@ package itb.ac.id.purrytify.data.local.dao
 
 import androidx.room.*
 import itb.ac.id.purrytify.data.local.entity.Song
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface SongDao {
     // Init Song DAO with simple queries
 
     @Query("SELECT * FROM song")
-    suspend fun getAll(): List<Song>
+    fun getAll(): Flow<List<Song>>
 
     @Query("SELECT * FROM song WHERE songId = :songId")
     suspend fun getById(songId: Int): Song?

@@ -6,17 +6,20 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.adapter.SongAdapter
+import itb.ac.id.purrytify.ui.addsong.AddSongViewModel
 
 class AllSongsFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateTextView: TextView
-    private lateinit var viewModel: LibraryViewModel
+    private val viewModel: LibraryViewModel by viewModels({ requireParentFragment() })
+//    private val addSongViewModel: AddSongViewModel by viewModels({ requireParentFragment() })
     private lateinit var songAdapter: SongAdapter
 
     override fun onCreateView(
@@ -29,8 +32,6 @@ class AllSongsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        viewModel = ViewModelProvider(requireParentFragment())[LibraryViewModel::class.java]
 
         recyclerView = view.findViewById(R.id.recyclerView)
         emptyStateTextView = view.findViewById(R.id.tvEmptyState)
@@ -53,6 +54,7 @@ class AllSongsFragment : Fragment() {
 
     private fun observeViewModel() {
         viewModel.allSongs.observe(viewLifecycleOwner) { songs ->
+//            viewModel.loadAllSongs()
             if (songs.isNotEmpty()) {
                 songAdapter.submitList(songs)
                 recyclerView.visibility = View.VISIBLE

@@ -2,6 +2,7 @@ package itb.ac.id.purrytify.ui
 
 import android.os.Bundle
 import android.util.Log
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -23,8 +24,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.material3.Surface
 import itb.ac.id.purrytify.ui.home.HomeFragment
 import androidx.navigation.compose.rememberNavController
+import dagger.hilt.android.AndroidEntryPoint
 import itb.ac.id.purrytify.ui.navigation.MainScreen
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -4,8 +4,7 @@ import android.util.Log
 import itb.ac.id.purrytify.data.api.ApiService
 //import itb.ac.id.purrytify.data.api.RetrofitClient
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
-import itb.ac.id.purrytify.data.model.LoginRequest
-import itb.ac.id.purrytify.data.model.RefreshResponse
+import itb.ac.id.purrytify.data.model.*
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -18,8 +17,9 @@ class AuthRepository @Inject constructor(
             val response = authApi.login(LoginRequest(email, password))
             if (response.isSuccessful) {
                 response.body()?.let { tokenManager.saveAccessToken(it.token) }
-//                response.body()?.let { tokenManager.saveRefreshToken(it.refresh) }
-//                tokenManager.setLoggedIn(true)
+                response.body()?.let { tokenManager.saveRefreshToken(it.refresh) }
+                val userID = authApi.verifyToken().body()?.user?.id
+                userID?.let { tokenManager.saveCurrentUserID(it) }
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed"))
@@ -31,24 +31,24 @@ class AuthRepository @Inject constructor(
 
     suspend fun logout() {
         tokenManager.clearToken()
-//        tokenManager.setLoggedIn(false)
     }
 
     suspend fun refreshToken(): Response<RefreshResponse> {
-            val refreshToken = tokenManager.getRefreshToken()
-            val response = authApi.refreshToken(refreshToken)
-            if (response.isSuccessful) {
-                response.body()?.let { tokenManager.saveAccessToken(it.token) }
-                return response
-            } else {
-                return  response
-            }
+        val refreshRequest = RefreshRequest(tokenManager.getRefreshToken())
+        Log.d("AuthRepository", "Refresh token: ${refreshRequest.refreshToken}")
+        val response = authApi.refreshToken(refreshRequest)
+        Log.d("AuthRepository", "Refresh token response: ${response.code()}")
+        Log.d("AuthRepository", "Refresh token response: ${response.body()}")
+        if (response.isSuccessful) {
+            response.body()?.let { tokenManager.saveAccessToken(it.accessToken) }
+            response.body()?.let { tokenManager.saveRefreshToken(it.refreshToken) }
+            return response
+        } else {
+            return  response
+        }
     }
 
-    suspend fun verifyToken(): Response<Unit> {
+    suspend fun verifyToken(): Response<VerifyResponse> {
         return authApi.verifyToken()
     }
-//    suspend fun isLoggedIn(): Boolean {
-//        return tokenManager.isLoggedIn()
-//    }
 }

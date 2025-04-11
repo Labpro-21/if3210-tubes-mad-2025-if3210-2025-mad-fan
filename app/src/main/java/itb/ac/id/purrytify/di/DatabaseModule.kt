@@ -21,7 +21,7 @@ object DatabaseModule {
             app,
             PurrytifyDatabase::class.java,
             "app_database"
-        ).build()
+        ).fallbackToDestructiveMigration().build()
     }
 
     @Provides

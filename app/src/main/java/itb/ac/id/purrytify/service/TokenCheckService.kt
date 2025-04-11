@@ -30,8 +30,8 @@ class TokenCheckService @AssistedInject constructor(
                     TokenCheckServiceScheduler.scheduleTokenCheck(applicationContext)
                     Result.success()
                 }
-
-                verifyResponse.code() == 403 -> {
+                // TODO: change this to 401 when the backend is fixed
+                verifyResponse.code() == 403 || verifyResponse.code() == 401 -> {
                     Log.d("TokenCheckService", "Token expired, refresh")
 
                     try {

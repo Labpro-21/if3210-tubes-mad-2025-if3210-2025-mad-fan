@@ -15,6 +15,7 @@ class AuthInterceptor @Inject constructor(private val tokenManager: TokenManager
             .addHeader("Authorization", "Bearer $accessToken")
             .build()
 
+        Log.d("AuthInterceptor", "Access token: $accessToken")
         val response = chain.proceed(request)
 
         if (response.code == 401) {

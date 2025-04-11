@@ -123,6 +123,9 @@ dependencies {
     // Glide
     implementation(libs.glide)
     kapt("com.github.bumptech.glide:compiler:4.16.0")
+
+    // JWT
+    implementation(libs.java.jwt)
 }
 
 kapt {

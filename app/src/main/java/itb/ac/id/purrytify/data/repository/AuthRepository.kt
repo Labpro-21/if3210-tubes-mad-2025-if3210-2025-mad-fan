@@ -1,8 +1,8 @@
 package itb.ac.id.purrytify.data.repository
 
 import android.util.Log
+import com.auth0.jwt.JWT
 import itb.ac.id.purrytify.data.api.ApiService
-//import itb.ac.id.purrytify.data.api.RetrofitClient
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.model.*
 import retrofit2.Response
@@ -18,8 +18,9 @@ class AuthRepository @Inject constructor(
             if (response.isSuccessful) {
                 response.body()?.let { tokenManager.saveAccessToken(it.token) }
                 response.body()?.let { tokenManager.saveRefreshToken(it.refresh) }
-                val userID = authApi.verifyToken().body()?.user?.id
-                userID?.let { tokenManager.saveCurrentUserID(it) }
+                val decodedJWT = JWT.decode(response.body()?.token)
+                val userID = decodedJWT.getClaim("id").asInt()
+                tokenManager.saveCurrentUserID(userID)
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Login failed"))

@@ -1,9 +1,6 @@
 package itb.ac.id.purrytify.data.api
 
-import itb.ac.id.purrytify.data.model.LoginRequest
-import itb.ac.id.purrytify.data.model.LoginResponse
-import itb.ac.id.purrytify.data.model.ProfileResponse
-import itb.ac.id.purrytify.data.model.RefreshResponse
+import itb.ac.id.purrytify.data.model.*
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
@@ -22,9 +19,9 @@ interface ApiService {
     suspend fun getProfilePicture(@Path("profilePhotoPath") profilePhotoPath: String): Response<ResponseBody>
 
     @GET("api/verify-token")
-    suspend fun verifyToken(): Response<Unit>
+    suspend fun verifyToken(): Response<VerifyResponse>
 
     @POST("api/refresh-token")
-    suspend fun refreshToken(@Body refreshToken: String): Response<RefreshResponse>
+    suspend fun refreshToken(@Body refreshToken: RefreshRequest): Response<RefreshResponse>
 
 }

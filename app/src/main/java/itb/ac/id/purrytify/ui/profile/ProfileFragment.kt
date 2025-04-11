@@ -207,12 +207,31 @@ fun ProfileContent(profileState: ProfileUiState) {
                         shape = RoundedCornerShape(20.dp),
                         modifier = Modifier
                             .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .width(118.dp)
                     ) {
                         Text(
                             "Edit Profile",
                             style = MaterialTheme.typography.titleSmall,
                         )
                     }
+
+                    Button(
+                        onClick = { /* TODO handle klik edit */ },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        shape = RoundedCornerShape(20.dp),
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .width(118.dp)
+                    ) {
+                        Text(
+                            "Logout",
+                            style = MaterialTheme.typography.titleSmall,
+                        )
+                    }
+
                     Spacer(modifier = Modifier.height(40.dp))
                     // Stats
                     Row(

@@ -2,6 +2,7 @@ package itb.ac.id.purrytify.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import itb.ac.id.purrytify.data.model.ProfileResponse
 import itb.ac.id.purrytify.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,15 +21,15 @@ data class ProfileUiState(
     val location: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
-    val songsCount: Int = 135,  // Dummy data
-    val likedCount: Int = 32,   // Dummy data
-    val listenedCount: Int = 50 // Dummy data
+    val songsCount: Int = 0,
+    val likedCount: Int = 0,
+    val listenedCount: Int = 0
 )
 
+@HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
-
     private val _profileState = MutableStateFlow(ProfileUiState())
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
@@ -37,21 +38,22 @@ class ProfileViewModel @Inject constructor(
             try {
                 _profileState.value = _profileState.value.copy(isLoading = true)
 
-                // Nanti replace API call
-                // val profile = userRepository.getProfile()
+                val profile = userRepository.getProfile()
 
-                // Sekarang dummy dulu
                 _profileState.value = _profileState.value.copy(
                     isLoading = false,
-                    id = 1,
-                    username = "13522xxx",
-                    email = "user@example.com",
-                    profilePhoto = "dummy.png",
-                    location = "Indonesia",
-                    createdAt = "2023-01-01",
-                    updatedAt = "2023-01-01"
+                    id = profile.id,
+                    username = profile.username,
+                    email = profile.email,
+                    profilePhoto = profile.profilePhoto,
+                    location = profile.location,
+                    createdAt = profile.createdAt,
+                    updatedAt = profile.updatedAt,
+                    // TODO: Connect data actual
+                    songsCount = 135, // Dummy, nanti connect ke actual
+                    likedCount = 32,  // Dummy, nanti connect ke actual
+                    listenedCount = 50 // Dummy, nanti connect ke actual
                 )
-
             } catch (e: Exception) {
                 _profileState.value = _profileState.value.copy(
                     isLoading = false,

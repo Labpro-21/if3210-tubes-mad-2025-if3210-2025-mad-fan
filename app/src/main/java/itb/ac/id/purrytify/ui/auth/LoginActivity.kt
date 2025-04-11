@@ -68,7 +68,9 @@ fun LoginScreen(
     var email by rememberSaveable  { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
-    viewModel.checkLogin()
+    LaunchedEffect(Unit) {
+        viewModel.checkLogin()
+    }
     LaunchedEffect(loginState) {
         if (loginState is LoginState.Success) {
             Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()

@@ -23,7 +23,8 @@ class AddSongUtil{
                     artist = artist,
                     filePath = filePath,
                     imagePath = imagePath,
-                    duration = duration
+                    duration = duration,
+                    userID = -1 // Placeholder, will be set later
                 )
             }
             catch (e: Exception) {

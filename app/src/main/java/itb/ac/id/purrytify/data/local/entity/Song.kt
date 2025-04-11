@@ -10,6 +10,7 @@ data class Song (
     var filePath: String,
     var imagePath: String,
     var duration: Long,
+    var userID: Int,
 )
 
 

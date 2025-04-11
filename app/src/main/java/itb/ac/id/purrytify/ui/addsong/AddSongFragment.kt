@@ -210,10 +210,9 @@ fun AddSongScreen(
                         song?.let {
                             it.title = title
                             it.artist = artist
-                            it.imagePath = photoUri?.toString() ?: ""
-                            viewModel?.saveAddSong(it)
                         }
                         if (songUri != null && photoUri != null) {
+                            viewModel?.saveAddSong(song!!)
                             onSave()
                         } else {
                             Toast.makeText(context, "Please Upload a Song and Artwork", Toast.LENGTH_LONG).show()

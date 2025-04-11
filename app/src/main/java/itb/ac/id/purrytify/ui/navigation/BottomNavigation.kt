@@ -14,6 +14,7 @@ import androidx.navigation.compose.*
 import itb.ac.id.purrytify.ui.home.HomeFragment
 import itb.ac.id.purrytify.ui.library.LibraryScreen
 import itb.ac.id.purrytify.ui.profile.ProfileContent
+import itb.ac.id.purrytify.ui.profile.ProfileScreen
 import itb.ac.id.purrytify.ui.profile.ProfileUiState
 
 @Composable
@@ -45,15 +46,7 @@ fun NavigationGraph(navController: NavHostController) {
 
         }
         composable(NavigationItem.Profile.route) {
-//            Dummy untuk preview
-            val dummyProfileState = ProfileUiState(
-                username = "13522001",
-                location = "Indonesia"
-            )
-
-            ProfileContent(profileState = dummyProfileState)
-
-//            ProfileFragment()
+            ProfileScreen()
         }
     }
 }

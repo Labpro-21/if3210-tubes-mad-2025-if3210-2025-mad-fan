@@ -1,5 +1,6 @@
 package itb.ac.id.purrytify.ui.home
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +25,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,22 +35,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.R
+import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @Composable
-fun HomeFragment() {
+fun HomeFragment(
+    viewModel: HomeViewModel = hiltViewModel(),
+    songPlayerViewModel: SongPlayerViewModel,
+    onPlay: () -> Unit
+) {
+    val newSongs by viewModel.newSongs.collectAsState()
+    val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        HomeContent()
+        HomeContent(newSongs, recentlyPlayed, songPlayerViewModel, onPlay)
     }
 }
 
 @Composable
-fun HomeContent() {
+fun HomeContent(
+    newSongsData: List<Song>,
+    recentlyPlayedData: List<Song>,
+    songPlayerViewModel: SongPlayerViewModel,
+    onPlay: () -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -68,7 +86,10 @@ fun HomeContent() {
             modifier = Modifier.fillMaxWidth()
         ) {
             items(newSongsData) { song ->
-                NewSongItem(song)
+                NewSongItem(song, onClick = {
+                    songPlayerViewModel.playSong(it)
+                    onPlay()
+                })
             }
         }
 
@@ -86,7 +107,10 @@ fun HomeContent() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             recentlyPlayedData.forEach { song ->
-                RecentlyPlayedItem(song)
+                RecentlyPlayedItem(song, onClick = {
+                    songPlayerViewModel.playSong(it)
+                    onPlay()
+                })
             }
         }
 
@@ -96,16 +120,16 @@ fun HomeContent() {
 }
 
 @Composable
-fun NewSongItem(song: Song) {
+fun NewSongItem(song: Song, onClick: (Song) -> Unit) {
     Column(
         modifier = Modifier
             .width(120.dp)
-            .clickable { /* Implement nanti */ },
+            .clickable { onClick(song) },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Cover
         Image(
-            painter = painterResource(id = song.coverResId),
+            painter = rememberAsyncImagePainter(model = song.imagePath),
             contentDescription = "${song.title} cover",
             modifier = Modifier
                 .fillMaxWidth()
@@ -137,16 +161,16 @@ fun NewSongItem(song: Song) {
 }
 
 @Composable
-fun RecentlyPlayedItem(song: Song) {
+fun RecentlyPlayedItem(song: Song, onClick: (Song) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Implement nanti */ }
+            .clickable { onClick(song) }
     ) {
         // Cover
         Image(
-            painter = painterResource(id = song.coverResId),
+            painter = rememberAsyncImagePainter(model = song.imagePath),
             contentDescription = "${song.title} cover",
             modifier = Modifier
                 .size(56.dp)
@@ -179,34 +203,10 @@ fun RecentlyPlayedItem(song: Song) {
     }
 }
 
-// Data class dummy
-data class Song(
-    val id: String,
-    val title: String,
-    val artist: String,
-    val coverResId: Int
-)
-
-// Masih dummy data, nanti diganti
-val newSongsData = listOf(
-    Song("1", "Starboy", "The Weeknd, Daft Punk", R.drawable.cover_starboy),
-    Song("2", "Here Comes The Sun", "The Beatles", R.drawable.cover_abbey_road),
-    Song("3", "Midnight Pretenders", "Tomoko Aran", R.drawable.cover_midnight_pretenders),
-    Song("4", "Violent Crimes", "Kanye West", R.drawable.cover_ye)
-)
-
-val recentlyPlayedData = listOf(
-    Song("5", "Jazz is for ordinary people", "berlioz", R.drawable.cover_jazz),
-    Song("6", "Loose", "Daniel Caesar", R.drawable.cover_loose),
-    Song("7", "Nights", "Frank Ocean", R.drawable.cover_blonde),
-    Song("8", "Kiss of Life", "Sade", R.drawable.cover_sade),
-    Song("9", "BEST INTEREST", "Tyler, The Creator", R.drawable.cover_best_interest)
-)
-
-@Preview(showBackground = true)
-@Composable
-fun HomeFragmentPreview() {
-    PurrytifyTheme {
-        HomeFragment()
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun HomeFragmentPreview() {
+//    PurrytifyTheme {
+//        HomeFragment()
+//    }
+//}

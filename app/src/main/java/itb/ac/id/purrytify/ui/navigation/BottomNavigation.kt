@@ -24,7 +24,6 @@ fun MainScreen(navController: NavHostController) {
 //        topBar = {
 //            currentRoute?.let { Header(currentRoute = it) }
 //        },
-//        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = { BottomNavigation(navController = navController) }
     ) { innerPadding ->
         Box(Modifier.padding(innerPadding)) {

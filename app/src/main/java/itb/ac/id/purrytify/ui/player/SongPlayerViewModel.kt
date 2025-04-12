@@ -84,12 +84,17 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun playSong(song: Song) {
-        _currentSong.value = song
-        Log.d("SongPlayer", "Playing song: ${_currentSong.value?.title}")
-        songPlayer.setMediaItem(fromUri(song.filePath))
+        val updatedSong = song.copy(lastPlayed = System.currentTimeMillis())
+        _currentSong.value = updatedSong
+        Log.d("SongPlayer", "Playing song: ${updatedSong.title}")
+
+        songPlayer.setMediaItem(fromUri(updatedSong.filePath))
         songPlayer.prepare()
         songPlayer.play()
 
+        viewModelScope.launch {
+            songDao.update(updatedSong)
+        }
     }
     fun togglePlayPause() {
         if (songPlayer.isPlaying) {

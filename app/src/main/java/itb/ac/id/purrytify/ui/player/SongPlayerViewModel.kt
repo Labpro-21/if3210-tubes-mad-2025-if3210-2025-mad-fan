@@ -274,7 +274,6 @@ class SongPlayerViewModel @Inject constructor(
             songDao.delete(_currentSong.value!!)
         }
         _currentSong.value = null
-        _hasSongEnded.value = true
         _isPlaying.value = false
         _position.value = 0L
         songPlayer.stop()

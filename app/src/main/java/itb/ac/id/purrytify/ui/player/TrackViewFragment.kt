@@ -127,9 +127,7 @@ fun TrackViewFragment(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Add to Queue button
                         IconButton(onClick = {
-                            // TODO: Implement add to queue functionality
                             Log.d("SongPlayer", "Add to queue: ${song!!.title}")
                         }) {
                             Icon(

@@ -1,6 +1,5 @@
 package itb.ac.id.purrytify.ui.navigation
 
-//import itb.ac.id.purrytify.ui.library.LibraryFragment
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
@@ -13,9 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import itb.ac.id.purrytify.ui.home.HomeFragment
 import itb.ac.id.purrytify.ui.library.LibraryScreen
-import itb.ac.id.purrytify.ui.profile.ProfileContent
 import itb.ac.id.purrytify.ui.profile.ProfileScreen
-import itb.ac.id.purrytify.ui.profile.ProfileUiState
 
 @Composable
 fun MainScreen(navController: NavHostController) {
@@ -27,6 +24,7 @@ fun MainScreen(navController: NavHostController) {
 //        topBar = {
 //            currentRoute?.let { Header(currentRoute = it) }
 //        },
+//        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         bottomBar = { BottomNavigation(navController = navController) }
     ) { innerPadding ->
         Box(Modifier.padding(innerPadding)) {

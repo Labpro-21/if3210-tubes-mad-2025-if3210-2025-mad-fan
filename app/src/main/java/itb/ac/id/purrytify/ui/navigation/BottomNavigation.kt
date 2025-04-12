@@ -1,6 +1,7 @@
 package itb.ac.id.purrytify.ui.navigation
 
 //import itb.ac.id.purrytify.ui.library.LibraryFragment
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -77,7 +78,6 @@ fun BottomNavigation(navController: NavHostController) {
         NavigationItem.Library,
         NavigationItem.Profile
     )
-
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground,
@@ -102,14 +102,28 @@ fun BottomNavigation(navController: NavHostController) {
                 label = { Text(text = item.title) },
                 selected = currentRoute == item.route,
                 onClick = {
-                    navController.navigate(item.route) {
-                        navController.graph.startDestinationRoute?.let { route ->
-                            popUpTo(route) {
-                                saveState = true
-                            }
+                    Log.d("BottomNavigation", "Clicked on: ${item.route}, current route: $currentRoute")
+
+                    if (currentRoute == "track_view") {
+                        // Pop back utk remove track_view dari back stack
+                        navController.popBackStack()
+
+                        // Baru navigate
+                        navController.navigate(item.route) {
+                            launchSingleTop = true
                         }
-                        launchSingleTop = true
-                        restoreState = true
+
+                        Log.d("BottomNavigation", "After navigation - Destination: ${item.route}")
+                    } else {
+                        navController.navigate(item.route) {
+                            navController.graph.startDestinationRoute?.let { route ->
+                                popUpTo(route) {
+                                    saveState = true
+                                }
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(

@@ -12,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.local.dao.SongDao
 import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.ui.navigation.NavigationItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +48,16 @@ class SongPlayerViewModel @Inject constructor(
 //        _playlist.value = playlist
 //    }
 
+    // Untuk store route last screen
+    private var lastScreenRoute: String = NavigationItem.Home.route
+
+    fun setLastScreenRoute(route: String) {
+        lastScreenRoute = route
+    }
+
+    fun getLastScreenRoute(): String {
+        return lastScreenRoute
+    }
 
     val songPlayer: ExoPlayer = ExoPlayer.Builder(getApplication()).build()
 
@@ -84,12 +95,17 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun playSong(song: Song) {
-        _currentSong.value = song
-        Log.d("SongPlayer", "Playing song: ${_currentSong.value?.title}")
-        songPlayer.setMediaItem(fromUri(song.filePath))
+        val updatedSong = song.copy(lastPlayed = System.currentTimeMillis())
+        _currentSong.value = updatedSong
+        Log.d("SongPlayer", "Playing song: ${updatedSong.title}")
+
+        songPlayer.setMediaItem(fromUri(updatedSong.filePath))
         songPlayer.prepare()
         songPlayer.play()
 
+        viewModelScope.launch {
+            songDao.update(updatedSong)
+        }
     }
     fun togglePlayPause() {
         if (songPlayer.isPlaying) {

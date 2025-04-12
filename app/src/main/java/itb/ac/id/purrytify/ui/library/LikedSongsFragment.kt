@@ -1,6 +1,7 @@
 package itb.ac.id.purrytify.ui.library
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,14 +13,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.adapter.SongAdapter
+import itb.ac.id.purrytify.ui.addsong.AddSongViewModel
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 
-class LikedSongsFragment : Fragment() {
+class LikedSongsFragment(private val songPlayerViewModel: SongPlayerViewModel, private val onPlay: () -> Unit) : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateTextView: TextView
     private val viewModel: LibraryViewModel by viewModels({ requireParentFragment() })
-    private val songPlayerViewModel: SongPlayerViewModel by viewModels({ requireParentFragment() })
+    //    private val addSongViewModel: AddSongViewModel by viewModels({ requireParentFragment() })
+//    private val songPlayerViewModel: SongPlayerViewModel by viewModels({ requireParentFragment() })
     private lateinit var songAdapter: SongAdapter
 
     override fun onCreateView(
@@ -33,7 +36,6 @@ class LikedSongsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Get the ViewModel from the parent fragment
         recyclerView = view.findViewById(R.id.recyclerView)
         emptyStateTextView = view.findViewById(R.id.tvEmptyState)
 
@@ -44,6 +46,7 @@ class LikedSongsFragment : Fragment() {
     private fun setupRecyclerView() {
         songAdapter = SongAdapter { song ->
             songPlayerViewModel.playSong(song)
+            onPlay() // harusnya sekali
         }
 
         recyclerView.apply {
@@ -54,15 +57,15 @@ class LikedSongsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-//        viewModel.likedSongs.observe(viewLifecycleOwner) { songs ->
-//            if (songs.isNotEmpty()) {
-//                songAdapter.submitList(songs)
-//                recyclerView.visibility = View.VISIBLE
-//                emptyStateTextView.visibility = View.GONE
-//            } else {
-//                recyclerView.visibility = View.GONE
-//                emptyStateTextView.visibility = View.VISIBLE
-//            }
-//        }
+        viewModel.likedSongs.observe(viewLifecycleOwner) { songs ->
+            if (songs.isNotEmpty()) {
+                songAdapter.submitList(songs)
+                recyclerView.visibility = View.VISIBLE
+                emptyStateTextView.visibility = View.GONE
+            } else {
+                recyclerView.visibility = View.GONE
+                emptyStateTextView.visibility = View.VISIBLE
+            }
+        }
     }
 }

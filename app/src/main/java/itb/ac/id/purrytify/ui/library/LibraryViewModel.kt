@@ -17,9 +17,12 @@ class LibraryViewModel @Inject constructor(
 ) : ViewModel() {
     private val _allSongs = MutableLiveData<List<Song>>()
     val allSongs: LiveData<List<Song>> = _allSongs
+    private val _likedSongs = MutableLiveData<List<Song>>()
+    val likedSongs: LiveData<List<Song>> = _likedSongs
 
     init {
         loadAllSongs()
+        loadLikedSongs()
     }
 
     private fun loadAllSongs() {
@@ -30,19 +33,13 @@ class LibraryViewModel @Inject constructor(
             }
         }
     }
-//    val likedSongs: LiveData<List<Song>> = likedSongDao.getAll().asLiveData()
 
-//        Dummy Data nanti dihapus
-//        _allSongs.value = listOf(
-//            Song(1, "Starboy", "The Weeknd, Daft Punk", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_starboy}", 100),
-//            Song(2, "Here Comes The Sun", "The Beatles", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_abbey_road}", 100),
-//            Song(3, "Midnight Pretenders", "Tomoko Aran", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_midnight_pretenders}", 100),
-//            Song(4, "Violent Crimes", "Kanye West", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_ye}", 100),
-//            Song(5, "Jazz is for ordinary people", "berlioz", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_jazz}", 100),
-//            Song(6, "Loose", "Daniel Caesar", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_loose}", 100),
-//            Song(7, "Nights", "Frank Ocean", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_blonde}", 100),
-//            Song(8, "Kiss of Life", "Sade", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_sade}", 100),
-//            Song(9, "BEST INTEREST", "Tyler, The Creator", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_best_interest}", 100)
-//        )
-
+    private fun loadLikedSongs() {
+        viewModelScope.launch {
+            val userID = tokenManager.getCurrentUserID()
+            songDao.getLiked(userID).collect { songs ->
+                _likedSongs.postValue(songs)
+            }
+        }
+    }
 }

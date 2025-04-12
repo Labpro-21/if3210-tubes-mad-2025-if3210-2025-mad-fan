@@ -57,7 +57,6 @@ class AllSongsFragment(private val songPlayerViewModel: SongPlayerViewModel, pri
 
     private fun observeViewModel() {
         viewModel.allSongs.observe(viewLifecycleOwner) { songs ->
-//            viewModel.loadAllSongs()
             if (songs.isNotEmpty()) {
                 songAdapter.submitList(songs)
                 recyclerView.visibility = View.VISIBLE

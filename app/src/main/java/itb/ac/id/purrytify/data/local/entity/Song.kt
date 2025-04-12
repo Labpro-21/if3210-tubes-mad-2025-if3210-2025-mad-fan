@@ -12,6 +12,8 @@ data class Song (
     var duration: Long = 0L,
     var userID: Int,
     var isLiked: Boolean = false,
+    var createdAt: Long = System.currentTimeMillis(),
+    var lastPlayed: Long? = null
 )
 
 

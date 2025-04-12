@@ -12,12 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.adapter.SongAdapter
+import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 
 class LikedSongsFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateTextView: TextView
     private val viewModel: LibraryViewModel by viewModels({ requireParentFragment() })
+    private val songPlayerViewModel: SongPlayerViewModel by viewModels({ requireParentFragment() })
     private lateinit var songAdapter: SongAdapter
 
     override fun onCreateView(
@@ -41,7 +43,7 @@ class LikedSongsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         songAdapter = SongAdapter { song ->
-            viewModel.playSong(song.songId)
+            songPlayerViewModel.playSong(song)
         }
 
         recyclerView.apply {
@@ -52,15 +54,15 @@ class LikedSongsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
-        viewModel.likedSongs.observe(viewLifecycleOwner) { songs ->
-            if (songs.isNotEmpty()) {
-                songAdapter.submitList(songs)
-                recyclerView.visibility = View.VISIBLE
-                emptyStateTextView.visibility = View.GONE
-            } else {
-                recyclerView.visibility = View.GONE
-                emptyStateTextView.visibility = View.VISIBLE
-            }
-        }
+//        viewModel.likedSongs.observe(viewLifecycleOwner) { songs ->
+//            if (songs.isNotEmpty()) {
+//                songAdapter.submitList(songs)
+//                recyclerView.visibility = View.VISIBLE
+//                emptyStateTextView.visibility = View.GONE
+//            } else {
+//                recyclerView.visibility = View.GONE
+//                emptyStateTextView.visibility = View.VISIBLE
+//            }
+//        }
     }
 }

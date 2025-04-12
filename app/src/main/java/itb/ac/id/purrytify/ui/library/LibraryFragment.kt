@@ -16,9 +16,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.PurrytifyDatabase
 import itb.ac.id.purrytify.ui.addsong.AddSongViewModel
+import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 
 @AndroidEntryPoint
-class LibraryFragment() : Fragment() {
+class LibraryFragment(private val songPlayerViewModel: SongPlayerViewModel, private val onPlay: () -> Unit) : Fragment() {
     private val viewModel: LibraryViewModel by viewModels()
 //    private val addSongViewModel: AddSongViewModel by viewModels()
     private lateinit var viewPager: ViewPager2
@@ -44,7 +45,7 @@ class LibraryFragment() : Fragment() {
     }
 
     private fun setupViewPager() {
-        val pagerAdapter = LibraryPagerAdapter(this)
+        val pagerAdapter = LibraryPagerAdapter(this, onPlay = onPlay, songPlayerViewModel)
         viewPager.adapter = pagerAdapter
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->

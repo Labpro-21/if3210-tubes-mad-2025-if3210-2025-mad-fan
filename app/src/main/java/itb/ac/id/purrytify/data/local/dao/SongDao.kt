@@ -8,11 +8,17 @@ import kotlinx.coroutines.flow.Flow
 interface SongDao {
     // Init Song DAO with simple queries
 
-    @Query("SELECT * FROM song")
-    fun getAll(): Flow<List<Song>>
+    @Query("SELECT * FROM song WHERE userID = :userId")
+    fun getAll(userId: Int): Flow<List<Song>>
 
-    @Query("SELECT * FROM song WHERE songId = :songId")
-    suspend fun getById(songId: Int): Song?
+    @Query("SELECT * FROM song WHERE userID = :userId AND songId = :songId")
+    suspend fun getById(songId: Int, userId: Int): Song?
+
+    @Query("SELECT * FROM song WHERE userID = :userId AND songId > :songId LIMIT 1")
+    suspend fun getNextSong(songId: Int, userId: Int): Song?
+
+    @Query("SELECT * FROM song WHERE userID = :userId AND songId < :songId ORDER BY songId DESC LIMIT 1")
+    suspend fun getPreviousSong(songId: Int, userId: Int): Song?
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(vararg song: Song): List<Long> // return id

@@ -1,22 +1,36 @@
 package itb.ac.id.purrytify.ui.library
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
-import itb.ac.id.purrytify.data.local.dao.LikedSongDao
+import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.local.dao.SongDao
-import itb.ac.id.purrytify.data.local.entity.LikedSong
 import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
-    songDao: SongDao,
-    likedSongDao: LikedSongDao
+    private val songDao: SongDao,
+    private val tokenManager: TokenManager,
 ) : ViewModel() {
+    private val _allSongs = MutableLiveData<List<Song>>()
+    val allSongs: LiveData<List<Song>> = _allSongs
 
-    val allSongs: LiveData<List<Song>> = songDao.getAll().asLiveData()
+    init {
+        loadAllSongs()
+    }
 
-    val likedSongs: LiveData<List<Song>> = likedSongDao.getAll().asLiveData()
+    private fun loadAllSongs() {
+        viewModelScope.launch {
+            val userID = tokenManager.getCurrentUserID()
+            songDao.getAll(userID).collect { songs ->
+                _allSongs.postValue(songs)
+            }
+        }
+    }
+//    val likedSongs: LiveData<List<Song>> = likedSongDao.getAll().asLiveData()
 
 //        Dummy Data nanti dihapus
 //        _allSongs.value = listOf(
@@ -31,7 +45,4 @@ class LibraryViewModel @Inject constructor(
 //            Song(9, "BEST INTEREST", "Tyler, The Creator", "", "android.resource://itb.ac.id.purrytify/${R.drawable.cover_best_interest}", 100)
 //        )
 
-    fun playSong(songId: Int) {
-        // function buat play song
-    }
 }

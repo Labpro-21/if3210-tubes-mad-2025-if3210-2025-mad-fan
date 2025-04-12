@@ -31,4 +31,5 @@ sealed class NavigationItem(
         iconResId = R.drawable.ic_profile_outline,
         selectedIconResId = R.drawable.ic_profile_filled
     )
+
 }

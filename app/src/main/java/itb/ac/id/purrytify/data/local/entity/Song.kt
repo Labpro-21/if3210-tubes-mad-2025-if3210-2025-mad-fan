@@ -9,8 +9,9 @@ data class Song (
     var artist: String,
     var filePath: String,
     var imagePath: String,
-    var duration: Long,
+    var duration: Long = 0L,
     var userID: Int,
+    var isLiked: Boolean = false,
 )
 
 

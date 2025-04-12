@@ -14,9 +14,7 @@ import androidx.navigation.compose.*
 import itb.ac.id.purrytify.ui.home.HomeFragment
 import itb.ac.id.purrytify.ui.library.LibraryScreen
 import itb.ac.id.purrytify.ui.player.*
-import itb.ac.id.purrytify.ui.profile.ProfileContent
 import itb.ac.id.purrytify.ui.profile.ProfileScreen
-import itb.ac.id.purrytify.ui.profile.ProfileUiState
 
 @Composable
 fun MainScreen(navController: NavHostController) {

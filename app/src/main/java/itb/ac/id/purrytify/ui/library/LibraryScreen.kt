@@ -30,9 +30,10 @@ import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.addsong.AddSongScreen
 import itb.ac.id.purrytify.ui.addsong.AddSongViewModel
+import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 
 @Composable
-fun LibraryScreen(modifier: Modifier = Modifier) {
+fun LibraryScreen(songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val fragmentManager = (context as AppCompatActivity).supportFragmentManager
     val viewId = remember { View.generateViewId() }
@@ -81,7 +82,9 @@ fun LibraryScreen(modifier: Modifier = Modifier) {
                     if (existingFragment == null) {
                         fragmentManager.commit {
                             setReorderingAllowed(true)
-                            replace(viewId, LibraryFragment(), "LibraryFragment")
+                            replace(viewId, LibraryFragment(
+                                songPlayerViewModel
+                                , onPlay), "LibraryFragment")
                         }
                     }
                 }

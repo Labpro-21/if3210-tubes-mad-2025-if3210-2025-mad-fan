@@ -123,7 +123,7 @@ Project is complete
 
 | **NIM**  |           **Nama**            | **Contributions**                                             |
 | :------: | :---------------------------: | ------------------------------------------------------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |                                                               |
+| 13522020 | Aurelius Justin Philo Fanjaya | Library, profile integration, home integration, edit, delete song                                                              |
 | 13522074 |    Muhammad Naufal Aulia      | Home page, Profile page, Navbar, Logout, Network sensing                                                               |
 | 13522090 |        Fedrianz Dharma        |                                                               |
 
@@ -131,7 +131,7 @@ Project is complete
 
 | **NIM**  |           **Nama**            | **Work Hours**    |
 | :------: | :---------------------------: | ----------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |                   |
+| 13522020 | Aurelius Justin Philo Fanjaya |        50         |
 | 13522074 |    Muhammad Naufal Aulia      |        54         |
 | 13522090 |        Fedrianz Dharma        |                   |
 

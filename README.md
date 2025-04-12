@@ -69,10 +69,10 @@ Background services monitor token expiry and refresh when needed. The app also d
 ## Screenshots
 1. Main Pages: Login, Home Screen, Library Screen, Profile Screen
 <div align="center">
-  <img src="screenshot/login.png" alt="Sign up" width="20%"/>
-  <img src="screenshot/home.png" alt="Home" width="20%"/>
-  <img src="screenshot/library.png" alt="Library" width="20%"/>
-  <img src="screenshot/profile.png" alt="Profile" width="20%"/>
+  <img src="screenshot/login.png" alt="Login" width="23%"/>
+  <img src="screenshot/home.png" alt="Home" width="23%"/>
+  <img src="screenshot/library.png" alt="Library" width="23%"/>
+  <img src="screenshot/profile.png" alt="Profile" width="23%"/>
 </div>
 
 <br>
@@ -94,7 +94,8 @@ Background services monitor token expiry and refresh when needed. The app also d
 4. Add, Edit, Delete Song
 <div align="center">
   <img src="screenshot/addsong.png" alt="add" width="30%"/>
-  <img src="screenshot/delete.png" alt="edit" width="29.9%"/>
+  <img src="screenshot/editsong.png" alt="edit" width="29.9%"/>
+  <img src="screenshot/deletesong.png" alt="delete" width="29.9%"/>
 </div>
 
 <br>
@@ -103,6 +104,14 @@ Background services monitor token expiry and refresh when needed. The app also d
   <img src="screenshot/nointernet.png" alt="network sensing" width="30%"/>
   <img src="screenshot/profilenointernet.png" alt="network sensing" width="30%"/>
   <img src="screenshot/internetrestored.png" alt="network sensing" width="30%"/>
+</div>
+
+<br>
+6. Bonus: Queue, Shuffle, Repeat (One & All)
+<div align="center">
+  <img src="screenshot/queue.png" alt="add" width="29%"/>
+  <img src="screenshot/repeatone.png" alt="edit" width="33%"/>
+  <img src="screenshot/repeatall.png" alt="delete" width="32%"/>
 </div>
 
 
@@ -114,15 +123,15 @@ Project is complete
 
 | **NIM**  |           **Nama**            | **Contributions**                                             |
 | :------: | :---------------------------: | ------------------------------------------------------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |                                                               |
-| 13522074 |    Muhammad Naufal Aulia      |                                                               |
+| 13522020 | Aurelius Justin Philo Fanjaya | Library, profile integration, home integration, edit, delete song                                                              |
+| 13522074 |    Muhammad Naufal Aulia      | Home page, Profile page, Navbar, Logout, Network sensing                                                               |
 | 13522090 |        Fedrianz Dharma        |                                                               |
 
 ## Work Hours
 
 | **NIM**  |           **Nama**            | **Work Hours**    |
 | :------: | :---------------------------: | ----------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |                   |
-| 13522074 |    Muhammad Naufal Aulia      |                   |
+| 13522020 | Aurelius Justin Philo Fanjaya |        50         |
+| 13522074 |    Muhammad Naufal Aulia      |        54         |
 | 13522090 |        Fedrianz Dharma        |                   |
 

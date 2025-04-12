@@ -5,6 +5,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import itb.ac.id.purrytify.data.api.interceptors.TokenManager
+import itb.ac.id.purrytify.data.local.dao.SongDao
+import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.data.repository.AuthRepository
 import itb.ac.id.purrytify.data.repository.UserRepository
 import itb.ac.id.purrytify.utils.ConnectivityObserver
@@ -13,6 +16,7 @@ import itb.ac.id.purrytify.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,8 +39,9 @@ data class ProfileUiState(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val authRepository: AuthRepository
-) : ViewModel() {
+    private val authRepository: AuthRepository,
+    private val songDao: SongDao,
+    ) : ViewModel() {
     private val _profileState = MutableStateFlow(ProfileUiState())
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
@@ -47,6 +52,16 @@ class ProfileViewModel @Inject constructor(
     // Network status
     private val _networkStatus = MutableStateFlow(ConnectionStatus.Available)
     val networkStatus: StateFlow<ConnectionStatus> = _networkStatus.asStateFlow()
+
+    // Songs Count
+    private val _songsCount = MutableStateFlow<Int>(0)
+    val songsCount: StateFlow<Int> = _songsCount
+
+    private val _likedCount = MutableStateFlow<Int>(0)
+    val likedCount: StateFlow<Int> = _likedCount
+
+    private val _listenedCount = MutableStateFlow<Int>(0)
+    val listenedCount: StateFlow<Int> = _listenedCount
 
     private lateinit var connectivityObserver: ConnectivityObserver
 
@@ -83,6 +98,28 @@ class ProfileViewModel @Inject constructor(
             try {
                 _profileState.value = _profileState.value.copy(isLoading = true)
                 val profile = userRepository.getProfile()
+
+                launch {
+                    songDao.getAllCount(profile.id).collectLatest { count ->
+                        _songsCount.value = count
+                        _profileState.value = _profileState.value.copy(songsCount = count)
+                    }
+                }
+
+                launch {
+                    songDao.getLikedCount(profile.id).collectLatest { count ->
+                        _likedCount.value = count
+                        _profileState.value = _profileState.value.copy(likedCount = count)
+                    }
+                }
+
+                launch {
+                    songDao.getPlayedCount(profile.id).collectLatest { count ->
+                        _listenedCount.value = count
+                        _profileState.value = _profileState.value.copy(listenedCount = count)
+                    }
+                }
+
                 _profileState.value = _profileState.value.copy(
                     isLoading = false,
                     id = profile.id,
@@ -92,10 +129,6 @@ class ProfileViewModel @Inject constructor(
                     location = profile.location,
                     createdAt = profile.createdAt,
                     updatedAt = profile.updatedAt,
-                    // TODO: Connect data actual
-                    songsCount = 135, // Dummy, nanti connect ke actual
-                    likedCount = 32,  // Dummy, nanti connect ke actual
-                    listenedCount = 50, // Dummy, nanti connect ke actual
                     isNetworkAvailable = true
                 )
             } catch (e: Exception) {

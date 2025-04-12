@@ -16,20 +16,29 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.ui.addsong.AddSongScreen
+import itb.ac.id.purrytify.ui.editsong.EditSongScreen
+import itb.ac.id.purrytify.ui.editsong.EditSongViewModel
+import itb.ac.id.purrytify.ui.theme.DavyGrey
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @Composable
 fun TrackViewFragment(
     viewModel: SongPlayerViewModel = hiltViewModel(),
+    editSongViewModel: EditSongViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
     val song by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val position by viewModel.position.collectAsState()
-//    val isFavorite by viewModel.isLiked.collectAsState()
     val ended by viewModel.hasSongEnded.collectAsState()
+
+    var showMenu by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
+
     LaunchedEffect(song) {
         Log.d("SongPlayer", "Song: ${viewModel.currentSong.value}")
     }
@@ -40,6 +49,7 @@ fun TrackViewFragment(
         }
         viewModel.resetHasSongEnded()
     }
+
     if (song != null) {
         Box(
             modifier = Modifier
@@ -49,28 +59,52 @@ fun TrackViewFragment(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp)
-                ,
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-
-                )
-            {
+            ) {
                 Row {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ExpandMore, contentDescription = "Back", modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurface)
                     }
                     Spacer(modifier = Modifier.weight(1f))
-                    IconButton(onClick = { /* TODO: More options */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More Options", modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurface)
+
+                    Box {
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More Options", modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurface)
+                        }
+
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false },
+                            modifier = Modifier.background(DavyGrey)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit Song") },
+                                onClick = {
+                                    showMenu = false
+                                    showSheet = true
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete Song") },
+                                onClick = {
+                                    showMenu = false
+                                    viewModel.deleteSong()
+                                    onBack()
+                                }
+                            )
+                        }
                     }
                 }
-                AsyncImage (
-                    model = song!!.imagePath,
+
+                Image(
+                    painter = rememberAsyncImagePainter(model = song!!.imagePath),
                     contentDescription = "Album Art",
                     modifier = Modifier
                         .size(400.dp)
                         .padding(16.dp)
                 )
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -78,10 +112,11 @@ fun TrackViewFragment(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column{
-                        Text(text = song!!.title, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.align(Alignment.Start))
-                        Text(text = song!!.artist, color = MaterialTheme.colorScheme.tertiary, modifier = Modifier.align(Alignment.Start))
+                    Column {
+                        Text(text = song!!.title, style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurface)
+                        Text(text = song!!.artist, color = MaterialTheme.colorScheme.tertiary)
                     }
+
                     IconButton(onClick = viewModel::toggleFavorite) {
                         Icon(
                             imageVector = if (song!!.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -141,6 +176,16 @@ fun TrackViewFragment(
                         Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White,modifier = Modifier.size(40.dp))
                     }
                 }
+            }
+        }
+        Box() {
+            if (showSheet) {
+                EditSongScreen(
+                    onDismiss = { showSheet = false },
+                    onSave = { showSheet = false },
+                    viewModel = editSongViewModel,
+                    song = song!!,
+                )
             }
         }
     }

@@ -244,7 +244,7 @@ fun ProfileContent(
                     }
                     Button(
                         onClick = {
-                            viewModel.logout(context)
+                            viewModel.logout(context.applicationContext)
                         },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,

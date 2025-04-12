@@ -2,6 +2,8 @@ package itb.ac.id.purrytify.ui.navigation
 
 //import itb.ac.id.purrytify.ui.library.LibraryFragment
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,21 +24,28 @@ fun MainScreen(navController: NavHostController) {
     val currentRoute = navBackStackEntry?.destination?.route
     val songPlayerViewModel = hiltViewModel<SongPlayerViewModel>()
     val currentSong by songPlayerViewModel.currentSong.collectAsState()
-    Scaffold(
-//        // Di desain figma ga ada header? kalo butuh nanti uncomment
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            //        // Di desain figma ga ada header? kalo butuh nanti uncomment
 //        topBar = {
 //            currentRoute?.let { Header(currentRoute = it) }
 //        },
-        bottomBar = { BottomNavigation(navController = navController) }
-    ) { innerPadding ->
-        Box(Modifier.padding(innerPadding)) {
-            NavigationGraph(songPlayerViewModel, navController = navController)
-        }
-        if (currentSong != null && currentRoute != "track_view") {
-            MiniPlayer(
-                songPlayerViewModel,
-                onExpand = { navController.navigate("track_view") }
-            )
+            bottomBar = {
+                Column {
+                    if (currentSong != null && currentRoute != "track_view") {
+                        MiniPlayer(
+                            songPlayerViewModel,
+                            onExpand = { navController.navigate("track_view") }
+                        )
+                    }
+                    BottomNavigation(navController = navController)
+                }
+            }
+        ) { innerPadding ->
+            Box(Modifier.padding(innerPadding)) {
+                NavigationGraph(songPlayerViewModel, navController = navController)
+            }
         }
     }
 }

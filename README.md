@@ -125,7 +125,7 @@ Project is complete
 | :------: | :---------------------------: | ------------------------------------------------------------- |
 | 13522020 | Aurelius Justin Philo Fanjaya | Library, profile integration, home integration, edit, delete song                                                              |
 | 13522074 |    Muhammad Naufal Aulia      | Home page, Profile page, Navbar, Logout, Network sensing                                                               |
-| 13522090 |        Fedrianz Dharma        |                                                               |
+| 13522090 |        Fedrianz Dharma        |  Login, Set up retrofit, database, api, track view, mini player, add song, dependency injnection, repository                                                             |
 
 ## Work Hours
 
@@ -133,5 +133,5 @@ Project is complete
 | :------: | :---------------------------: | ----------------- |
 | 13522020 | Aurelius Justin Philo Fanjaya |        50         |
 | 13522074 |    Muhammad Naufal Aulia      |        54         |
-| 13522090 |        Fedrianz Dharma        |                   |
+| 13522090 |        Fedrianz Dharma        |        150        |
 

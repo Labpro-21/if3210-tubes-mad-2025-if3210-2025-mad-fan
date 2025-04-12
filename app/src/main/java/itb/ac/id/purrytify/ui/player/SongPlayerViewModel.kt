@@ -94,8 +94,10 @@ class SongPlayerViewModel @Inject constructor(
     fun togglePlayPause() {
         if (songPlayer.isPlaying) {
             songPlayer.pause()
+            _isPlaying.value = false
         } else {
             songPlayer.play()
+            _isPlaying.value = true
         }
     }
 

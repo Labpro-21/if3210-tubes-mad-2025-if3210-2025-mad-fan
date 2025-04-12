@@ -45,7 +45,7 @@ class AllSongsFragment(private val songPlayerViewModel: SongPlayerViewModel, pri
     private fun setupRecyclerView() {
         songAdapter = SongAdapter { song ->
             songPlayerViewModel.playSong(song)
-            onPlay()
+            onPlay() // harusnya sekali
         }
 
         recyclerView.apply {

@@ -25,7 +25,7 @@ import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 fun MiniPlayer(viewModel: SongPlayerViewModel = hiltViewModel(), onExpand: () -> Unit) {
     val currentSong by viewModel.currentSong.collectAsState()
     val position by viewModel.position.collectAsState()
-    val isPlaying = viewModel.songPlayer.isPlaying
+    val isPlaying by viewModel.isPlaying.collectAsState()
 
     if (currentSong != null) {
         Surface(

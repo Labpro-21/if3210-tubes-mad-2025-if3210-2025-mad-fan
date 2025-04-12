@@ -21,7 +21,7 @@ class AddSongViewModel @Inject constructor (
             song.userID = tokenManager.getCurrentUserID()
             Log.d("All Songs", song.toString() + " userID: " + tokenManager.getCurrentUserID())
             SongDao.insert(song)
-            Log.d("All Songs", SongDao.getAll().toString())
+            Log.d("All Songs", SongDao.getAll(tokenManager.getCurrentUserID()).toString())
         }
     }
 }

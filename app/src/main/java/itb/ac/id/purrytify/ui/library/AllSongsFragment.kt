@@ -13,13 +13,15 @@ import androidx.recyclerview.widget.RecyclerView
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.adapter.SongAdapter
 import itb.ac.id.purrytify.ui.addsong.AddSongViewModel
+import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 
-class AllSongsFragment : Fragment() {
+class AllSongsFragment(private val songPlayerViewModel: SongPlayerViewModel, private val onPlay: () -> Unit) : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var emptyStateTextView: TextView
     private val viewModel: LibraryViewModel by viewModels({ requireParentFragment() })
 //    private val addSongViewModel: AddSongViewModel by viewModels({ requireParentFragment() })
+//    private val songPlayerViewModel: SongPlayerViewModel by viewModels({ requireParentFragment() })
     private lateinit var songAdapter: SongAdapter
 
     override fun onCreateView(
@@ -42,7 +44,8 @@ class AllSongsFragment : Fragment() {
 
     private fun setupRecyclerView() {
         songAdapter = SongAdapter { song ->
-            viewModel.playSong(song.songId)
+            songPlayerViewModel.playSong(song)
+            onPlay() // harusnya sekali
         }
 
         recyclerView.apply {

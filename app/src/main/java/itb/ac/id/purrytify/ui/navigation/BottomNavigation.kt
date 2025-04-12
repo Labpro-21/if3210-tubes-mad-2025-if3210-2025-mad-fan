@@ -4,15 +4,16 @@ package itb.ac.id.purrytify.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import itb.ac.id.purrytify.ui.home.HomeFragment
 import itb.ac.id.purrytify.ui.library.LibraryScreen
+import itb.ac.id.purrytify.ui.player.*
 import itb.ac.id.purrytify.ui.profile.ProfileContent
 import itb.ac.id.purrytify.ui.profile.ProfileScreen
 import itb.ac.id.purrytify.ui.profile.ProfileUiState
@@ -21,7 +22,8 @@ import itb.ac.id.purrytify.ui.profile.ProfileUiState
 fun MainScreen(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-
+    val songPlayerViewModel = hiltViewModel<SongPlayerViewModel>()
+    val currentSong by songPlayerViewModel.currentSong.collectAsState()
     Scaffold(
 //        // Di desain figma ga ada header? kalo butuh nanti uncomment
 //        topBar = {
@@ -30,23 +32,33 @@ fun MainScreen(navController: NavHostController) {
         bottomBar = { BottomNavigation(navController = navController) }
     ) { innerPadding ->
         Box(Modifier.padding(innerPadding)) {
-            NavigationGraph(navController = navController)
+            NavigationGraph(songPlayerViewModel, navController = navController)
+        }
+        if (currentSong != null && currentRoute != "track_view") {
+            MiniPlayer(
+                songPlayerViewModel,
+                onExpand = { navController.navigate("track_view") }
+            )
         }
     }
 }
 
 @Composable
-fun NavigationGraph(navController: NavHostController) {
+fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: NavHostController) {
     NavHost(navController = navController, startDestination = NavigationItem.Home.route) {
         composable(NavigationItem.Home.route) {
             HomeFragment()
         }
         composable(NavigationItem.Library.route) {
-            LibraryScreen()
+            LibraryScreen(songPlayerViewModel, onPlay = { navController.navigate("track_view")
+            })
 
         }
         composable(NavigationItem.Profile.route) {
             ProfileScreen()
+        }
+        composable("track_view") {
+            TrackViewFragment(songPlayerViewModel, onBack = { navController.popBackStack() })
         }
     }
 }

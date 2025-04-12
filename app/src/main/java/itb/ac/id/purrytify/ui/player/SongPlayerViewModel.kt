@@ -268,4 +268,15 @@ class SongPlayerViewModel @Inject constructor(
         _songQueue.value = emptyList()
         _currentSong.value = null
     }
+
+    fun deleteSong() {
+        viewModelScope.launch {
+            songDao.delete(_currentSong.value!!)
+        }
+        _currentSong.value = null
+        _hasSongEnded.value = true
+        _isPlaying.value = false
+        _position.value = 0L
+        songPlayer.stop()
+    }
 }

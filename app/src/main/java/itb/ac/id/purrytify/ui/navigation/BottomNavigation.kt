@@ -37,10 +37,16 @@ fun MainScreen(navController: NavHostController) {
                     if (currentSong != null && currentRoute != "track_view") {
                         MiniPlayer(
                             songPlayerViewModel,
-                            onExpand = { navController.navigate("track_view") }
+                            onExpand = {
+                                // Store current route
+                                val currentScreen = currentRoute ?: NavigationItem.Home.route
+                                Log.d("Navigation", "Storing current screen: $currentScreen")
+                                songPlayerViewModel.setLastScreenRoute(currentScreen)
+                                navController.navigate("track_view")
+                            }
                         )
                     }
-                    BottomNavigation(navController = navController)
+                    BottomNavigation(navController = navController, songPlayerViewModel = songPlayerViewModel)
                 }
             }
         ) { innerPadding ->
@@ -58,21 +64,40 @@ fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: Nav
             HomeFragment()
         }
         composable(NavigationItem.Library.route) {
-            LibraryScreen(songPlayerViewModel, onPlay = { navController.navigate("track_view")
+            LibraryScreen(songPlayerViewModel, onPlay = {
+                // Store library sebagai last screen
+                songPlayerViewModel.setLastScreenRoute(NavigationItem.Library.route)
+                navController.navigate("track_view")
             })
-
         }
         composable(NavigationItem.Profile.route) {
             ProfileScreen()
         }
         composable("track_view") {
-            TrackViewFragment(songPlayerViewModel, onBack = { navController.popBackStack() })
+            TrackViewFragment(
+                viewModel = songPlayerViewModel,
+                onBack = {
+                    val lastRoute = songPlayerViewModel.getLastScreenRoute()
+                    Log.d("Navigation", "Going back to last route: $lastRoute")
+
+                    navController.popBackStack()
+                    if (navController.currentBackStackEntry?.destination?.route != lastRoute) {
+                        navController.navigate(lastRoute) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                }
+            )
         }
     }
 }
 
 @Composable
-fun BottomNavigation(navController: NavHostController) {
+fun BottomNavigation(navController: NavHostController, songPlayerViewModel: SongPlayerViewModel) {
     val items = listOf(
         NavigationItem.Home,
         NavigationItem.Library,
@@ -102,27 +127,27 @@ fun BottomNavigation(navController: NavHostController) {
                 label = { Text(text = item.title) },
                 selected = currentRoute == item.route,
                 onClick = {
-                    Log.d("BottomNavigation", "Clicked on: ${item.route}, current route: $currentRoute")
-
+                    Log.d("Navigation", "Clicked on: ${item.route}, current route: $currentRoute")
                     if (currentRoute == "track_view") {
+                        songPlayerViewModel.setLastScreenRoute(item.route)
                         // Pop back utk remove track_view dari back stack
                         navController.popBackStack()
-
-                        // Baru navigate
-                        navController.navigate(item.route) {
-                            launchSingleTop = true
+                        if (navController.currentBackStackEntry?.destination?.route != item.route) {
+                            navController.navigate(item.route) {
+                                // Pop up to the root to clear any nested navigation
+                                popUpTo(navController.graph.startDestinationId)
+                                launchSingleTop = true
+                            }
                         }
-
-                        Log.d("BottomNavigation", "After navigation - Destination: ${item.route}")
                     } else {
-                        navController.navigate(item.route) {
-                            navController.graph.startDestinationRoute?.let { route ->
-                                popUpTo(route) {
+                        if (currentRoute != item.route) {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.startDestinationId) {
                                     saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
                         }
                     }
                 },

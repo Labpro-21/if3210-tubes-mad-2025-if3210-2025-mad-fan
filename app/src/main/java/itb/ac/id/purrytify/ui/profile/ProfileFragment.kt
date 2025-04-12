@@ -49,6 +49,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
 import itb.ac.id.purrytify.ui.auth.LoginActivity
+import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @AndroidEntryPoint
 class ProfileFragment : Fragment() {
@@ -61,7 +62,11 @@ class ProfileFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                MaterialTheme {
+                PurrytifyTheme {
+                    val context = LocalContext.current
+                    LaunchedEffect(Unit) {
+                        viewModel.observeNetworkConnectivity(context)
+                    }
                     ProfileScreen()
                 }
             }
@@ -77,6 +82,10 @@ fun ProfileScreen() {
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
+        viewModel.observeNetworkConnectivity(context)
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.fetchProfile()
     }
 
@@ -85,14 +94,11 @@ fun ProfileScreen() {
         when (logoutState) {
             is LogoutState.Success -> {
                 Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-
                 // Navigate ke login
                 val intent = Intent(context, LoginActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                 context.startActivity(intent)
-
                 viewModel.resetLogoutState()
-
                 if (context is Activity) {
                     context.finish()
                 }
@@ -101,11 +107,19 @@ fun ProfileScreen() {
         }
     }
 
-    ProfileContent(
-        profileState = profileState,
-        logoutState = logoutState,
-        viewModel = viewModel
-    )
+    // Check network, tampilin halaman yang sesuai
+//    Log.d("Network", "Status : ${profileState.isNetworkAvailable}" )
+    if (!profileState.isNetworkAvailable) {
+        NoInternetScreen(
+            onRetryClick = { viewModel.fetchProfile() }
+        )
+    } else {
+        ProfileContent(
+            profileState = profileState,
+            logoutState = logoutState,
+            viewModel = viewModel
+        )
+    }
 }
 
 @Composable

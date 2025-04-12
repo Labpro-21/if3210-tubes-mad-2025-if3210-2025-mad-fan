@@ -11,6 +11,15 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE userID = :userId")
     fun getAll(userId: Int): Flow<List<Song>>
 
+    @Query("SELECT * FROM song WHERE userID = :userId AND isLiked = true")
+    fun getLiked(userId: Int): Flow<List<Song>>
+
+    @Query("SELECT * FROM song WHERE userID = :userId AND lastPlayed IS NULL ORDER BY createdAt DESC")
+    fun getNew(userId: Int): Flow<List<Song>>
+
+    @Query("SELECT * FROM song WHERE userID = :userId AND lastPlayed IS NOT NULL ORDER BY lastPlayed DESC")
+    fun getRecentlyPlayed(userId: Int): Flow<List<Song>>
+
     @Query("SELECT * FROM song WHERE userID = :userId AND songId = :songId")
     suspend fun getById(songId: Int, userId: Int): Song?
 

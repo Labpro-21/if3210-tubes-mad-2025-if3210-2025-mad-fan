@@ -11,7 +11,7 @@ class LibraryPagerAdapter(fragment: Fragment, private val onPlay: () -> Unit, pr
     override fun createFragment(position: Int): Fragment {
         return when (position) {
             0 -> AllSongsFragment(songPlayerViewModel, onPlay)
-            1 -> LikedSongsFragment()
+            1 -> LikedSongsFragment(songPlayerViewModel, onPlay)
             else -> throw IllegalArgumentException("Invalid position $position")
         }
     }

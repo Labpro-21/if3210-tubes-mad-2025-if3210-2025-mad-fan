@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import itb.ac.id.purrytify.data.repository.AuthRepository
 import itb.ac.id.purrytify.data.repository.UserRepository
+import itb.ac.id.purrytify.service.TokenCheckService
+import itb.ac.id.purrytify.service.TokenCheckServiceScheduler
 import itb.ac.id.purrytify.utils.ConnectivityObserver
 import itb.ac.id.purrytify.utils.ConnectionStatus
 import itb.ac.id.purrytify.utils.NetworkConnectivityObserver
@@ -117,6 +119,7 @@ class ProfileViewModel @Inject constructor(
             try {
                 _logoutState.value = LogoutState.Loading
                 authRepository.logout()
+                TokenCheckServiceScheduler.cancelScheduleTokenCheck(context)
                 _logoutState.value = LogoutState.Success
             } catch (e: Exception) {
                 _logoutState.value = LogoutState.Error(e.message ?: "Logout failed")

@@ -67,7 +67,43 @@ Background services monitor token expiry and refresh when needed. The app also d
 46. androidx.media3-exoplayer
 
 ## Screenshots
+1. Main Pages: Login, Home Screen, Library Screen, Profile Screen
+<div align="center">
+  <img src="screenshot/login.png" alt="Sign up" width="20%"/>
+  <img src="screenshot/home.png" alt="Home" width="20%"/>
+  <img src="screenshot/library.png" alt="Library" width="20%"/>
+  <img src="screenshot/profile.png" alt="Profile" width="20%"/>
+</div>
 
+<br>
+2. Library (Liked Tab)
+<div align="center">
+  <img src="screenshot/liked.png" alt="Home Screen" width="29.8%"/>
+</div>
+
+<br>
+3. Player, Miniplayer
+<div align="center">
+  <img src="screenshot/player.png" alt="player" width="24%"/>
+  <img src="screenshot/miniplayer1.png" alt="miniplayer1" width="24%"/>
+  <img src="screenshot/miniplayer2.png" alt="miniplayer2" width="24%"/>
+  <img src="screenshot/miniplayer3.png" alt="miniplayer3" width="24%"/>
+</div>
+
+<br>
+4. Add, Edit, Delete Song
+<div align="center">
+  <img src="screenshot/addsong.png" alt="add" width="30%"/>
+  <img src="screenshot/delete.png" alt="edit" width="29.9%"/>
+</div>
+
+<br>
+5. Network Sensing (Profile page & Popup Snackbar)
+<div align="center">
+  <img src="screenshot/nointernet.png" alt="network sensing" width="30%"/>
+  <img src="screenshot/profilenointernet.png" alt="network sensing" width="30%"/>
+  <img src="screenshot/internetrestored.png" alt="network sensing" width="30%"/>
+</div>
 
 
 ## Project Status

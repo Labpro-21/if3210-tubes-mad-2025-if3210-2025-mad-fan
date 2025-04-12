@@ -154,7 +154,12 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         // Handle login action
-                        viewModel.login(email, password)
+                        if (email.isEmpty() || password.isEmpty()) {
+                            Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }else{
+                            viewModel.login(email, password)
+                        }
 
                     },
                     modifier = Modifier.fillMaxWidth().height(48.dp),

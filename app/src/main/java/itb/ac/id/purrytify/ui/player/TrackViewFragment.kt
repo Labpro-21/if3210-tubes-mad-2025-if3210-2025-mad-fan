@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,10 +39,15 @@ fun TrackViewFragment(
 
     var showMenu by remember { mutableStateOf(false) }
     var showSheet by remember { mutableStateOf(false) }
+    // Shuffle & repeat state
+    var isShuffleActive by remember { mutableStateOf(false) }
+    // Mode repeat: 0 = Off, 1 = Repeat One, 2 = Repeat All
+    var repeatMode by remember { mutableStateOf(0) }
 
     LaunchedEffect(song) {
         Log.d("SongPlayer", "Song: ${viewModel.currentSong.value}")
     }
+
     LaunchedEffect(ended) {
         Log.d("SongPlayer", "ended: $ended")
         if (ended){
@@ -61,7 +67,8 @@ fun TrackViewFragment(
                     .fillMaxSize()
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
+            )
+            {
                 Row {
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ExpandMore, contentDescription = "Back", modifier = Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onSurface)
@@ -117,18 +124,33 @@ fun TrackViewFragment(
                         Text(text = song!!.artist, color = MaterialTheme.colorScheme.tertiary)
                     }
 
-                    IconButton(onClick = viewModel::toggleFavorite) {
-                        Icon(
-                            imageVector = if (song!!.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = "Like",
-                            tint = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(8.dp).size(40.dp)
-                        )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Add to Queue button
+                        IconButton(onClick = {
+                            // TODO: Implement add to queue functionality
+                            Log.d("SongPlayer", "Add to queue: ${song!!.title}")
+                        }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.PlaylistAdd,
+                                contentDescription = "Add to Queue",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+
+                        IconButton(onClick = viewModel::toggleFavorite) {
+                            Icon(
+                                imageVector = if (song!!.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = "Like",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
                 }
-
                 Spacer(modifier = Modifier.height(32.dp))
-
                 Slider(
                     value = position.toFloat() / song!!.duration.toFloat(),
                     onValueChange = { newValue ->
@@ -149,31 +171,95 @@ fun TrackViewFragment(
                     Text(
                         text = viewModel.formatTime(position),
                         color = MaterialTheme.colorScheme.onSurface,
-//                        modifier = Modifier.weight(1f)
                     )
                     Text(
                         text = viewModel.formatTime(song!!.duration),
                         color = MaterialTheme.colorScheme.onSurface,
-//                        modifier = Modifier.weight(1f)
                     )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Shuffle button
+                    IconButton(
+                        onClick = {
+                            isShuffleActive = !isShuffleActive
+                            // TODO: Implement shuffle functionality
+                            Log.d("SongPlayer", "Shuffle: $isShuffleActive")
+                        }
+                    ) {
+                        Icon(
+                            Icons.Default.Shuffle,
+                            contentDescription = "Shuffle",
+                            tint = if (isShuffleActive) Color.White else Color.Gray,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
                     IconButton(onClick = { viewModel.previousSong() }) {
-                        Icon(Icons.Default.SkipPrevious, contentDescription = "Previous", tint = Color.White, modifier = Modifier.size(40.dp))
+                        Icon(
+                            Icons.Default.SkipPrevious,
+                            contentDescription = "Previous",
+                            tint = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        )
                     }
                     IconButton(onClick = {
                         viewModel.togglePlayPause()
                     }) {
                         Icon(
-                            imageVector =  if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             contentDescription = "Play/Pause",
                             tint = Color.White,
                             modifier = Modifier.size(40.dp)
                         )
                     }
                     IconButton(onClick = { viewModel.nextSong() }) {
-                        Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = Color.White,modifier = Modifier.size(40.dp))
+                        Icon(
+                            Icons.Default.SkipNext,
+                            contentDescription = "Next",
+                            tint = Color.White,
+                            modifier = Modifier.size(40.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // Repeat One/All button
+                    IconButton(
+                        onClick = {
+                            // Cycle modenya
+                            repeatMode = (repeatMode + 1) % 3
+                            // TODO: Implement repeat functionality
+                            val modeText = when (repeatMode) {
+                                0 -> "Off"
+                                1 -> "One"
+                                2 -> "All"
+                                else -> "Off"
+                            }
+                            Log.d("SongPlayer", "Repeat Mode: $modeText")
+                        }
+                    ) {
+                        Icon(
+                            imageVector = when (repeatMode) {
+                                0 -> Icons.Default.Repeat
+                                1 -> Icons.Default.RepeatOne
+                                2 -> Icons.Default.Repeat
+                                else -> Icons.Default.Repeat
+                            },
+                            contentDescription = "Repeat",
+                            tint = when (repeatMode) {
+                                0 -> Color.Gray
+                                1, 2 -> Color.White
+                                else -> Color.Gray
+                            },
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
             }

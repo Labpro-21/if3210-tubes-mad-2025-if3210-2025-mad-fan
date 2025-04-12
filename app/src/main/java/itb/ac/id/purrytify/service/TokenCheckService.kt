@@ -72,7 +72,7 @@ object TokenCheckServiceScheduler {
     fun scheduleTokenCheck(context: Context) {
         val request = OneTimeWorkRequestBuilder<TokenCheckService>()
             // TODO change it to 5 minute
-            .setInitialDelay(10, TimeUnit.SECONDS) // Check in 5 minutes
+            .setInitialDelay(5, TimeUnit.MINUTES) // Check in 5 minutes
             .setBackoffCriteria(
                 BackoffPolicy.LINEAR,
                 5,
@@ -85,5 +85,8 @@ object TokenCheckServiceScheduler {
             ExistingWorkPolicy.REPLACE,
             request)
 
+    }
+    fun cancelScheduleTokenCheck(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork("TokenCheckService")
     }
 }

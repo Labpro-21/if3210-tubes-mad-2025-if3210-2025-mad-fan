@@ -1,18 +1,15 @@
 package itb.ac.id.purrytify.ui.library
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.util.Log
+import android.view.*
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.ui.adapter.SongAdapter
-import itb.ac.id.purrytify.ui.addsong.AddSongViewModel
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 
 class AllSongsFragment(private val songPlayerViewModel: SongPlayerViewModel, private val onPlay: () -> Unit) : Fragment() {
@@ -43,10 +40,16 @@ class AllSongsFragment(private val songPlayerViewModel: SongPlayerViewModel, pri
     }
 
     private fun setupRecyclerView() {
-        songAdapter = SongAdapter { song ->
-            songPlayerViewModel.playSong(song)
-            onPlay() // harusnya sekali
-        }
+        songAdapter = SongAdapter (
+            onSongClick = { song ->
+                songPlayerViewModel.playSong(song)
+                onPlay() // harusnya sekali
+            },
+            onAddToQueueClick = { song ->
+                // Add the song to the queue
+                songPlayerViewModel.addQueue(song)
+                Log.d("AllSongsFragment", "Added ${song.title} to queue.")
+            })
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(context)

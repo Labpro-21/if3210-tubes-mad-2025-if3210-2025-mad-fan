@@ -44,10 +44,16 @@ class LikedSongsFragment(private val songPlayerViewModel: SongPlayerViewModel, p
     }
 
     private fun setupRecyclerView() {
-        songAdapter = SongAdapter { song ->
-            songPlayerViewModel.playSong(song)
-            onPlay() // harusnya sekali
-        }
+        songAdapter = SongAdapter (
+            onSongClick = { song ->
+                songPlayerViewModel.playSong(song)
+                onPlay() // harusnya sekali
+            },
+            onAddToQueueClick = { song ->
+                // Add the song to the queue
+                songPlayerViewModel.addQueue(song)
+                Log.d("AllSongsFragment", "Added ${song.title} to queue.")
+            })
 
         recyclerView.apply {
             layoutManager = LinearLayoutManager(context)

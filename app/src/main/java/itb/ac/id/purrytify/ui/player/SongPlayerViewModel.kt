@@ -36,17 +36,23 @@ class SongPlayerViewModel @Inject constructor(
     private val _position = MutableStateFlow(0L)
     val position: StateFlow<Long> = _position
 
-    private val _hasSongEnded = MutableStateFlow(false)
-    val hasSongEnded: StateFlow<Boolean> = _hasSongEnded
+    private val _songQueue = MutableStateFlow<List<Song>>(emptyList())
+    val songQueue: StateFlow<List<Song>> = _songQueue
 
-//    private val _playlist = MutableStateFlow<List<Song>>(emptyList())
-//    val playlist: StateFlow<List<Song>> = _playlist
-//
-//    private var currentIndex = -1
-//
-//    fun setPlaylist(playlist: List<Song>) {
-//        _playlist.value = playlist
-//    }
+    private var currentIndex = -1
+
+    private val _isQueueEmpty = MutableStateFlow(false)
+    val isQueueEmpty: StateFlow<Boolean> = _isQueueEmpty
+
+    private val _isShuffleEnabled = MutableStateFlow(false)
+    val isShuffleEnabled: StateFlow<Boolean> = _isShuffleEnabled
+
+    enum class RepeatMode {
+        OFF, ONE, ALL
+    }
+
+    private val _repeatMode = MutableStateFlow(RepeatMode.OFF)
+    val repeatMode: StateFlow<RepeatMode> = _repeatMode
 
     // Untuk store route last screen
     private var lastScreenRoute: String = NavigationItem.Home.route
@@ -73,9 +79,21 @@ class SongPlayerViewModel @Inject constructor(
                     Log.d("SongPlayer", "Playing song: ${_currentSong.value?.title}")
                 }
                 Player.STATE_ENDED -> {
-                    _currentSong.value = null
-                    _hasSongEnded.value = true
-                    Log.d("SongPlayer", "Playing song: ${_currentSong.value?.title}")
+                    if (_repeatMode.value == RepeatMode.ONE) {
+                        playAtIndex(currentIndex)
+                        Log.d("SongPlayer", "Repeating song: ${_currentSong.value?.title}")
+                    } else if (_repeatMode.value == RepeatMode.ALL) {
+                        nextSong()
+                    } else {
+                        if (_songQueue.value.isEmpty()) {
+                            _isQueueEmpty.value = true
+                            songPlayer.stop()
+                            _currentSong.value = null
+                            Log.d("SongPlayer", "Queue finished, no more songs to play.")
+                        } else {
+                            nextSong()
+                        }
+                    }
                 }
 
                 Player.STATE_BUFFERING -> {
@@ -95,9 +113,24 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun playSong(song: Song) {
-        val updatedSong = song.copy(lastPlayed = System.currentTimeMillis())
+        _songQueue.value = listOf(song)
+        _isQueueEmpty.value = _songQueue.value.isEmpty()
+        currentIndex = 0
+        playAtIndex(currentIndex)
+    }
+
+    private fun playAtIndex(index: Int) {
+        if (index < 0 || index >= _songQueue.value.size) return
+        val originalSong = _songQueue.value[index]
+        val updatedSong = originalSong.copy(lastPlayed = System.currentTimeMillis())
+
+
+        val newQueue = _songQueue.value.toMutableList()
+        newQueue[index] = updatedSong
+        _songQueue.value = newQueue
+
+        currentIndex = index
         _currentSong.value = updatedSong
-        Log.d("SongPlayer", "Playing song: ${updatedSong.title}")
 
         songPlayer.setMediaItem(fromUri(updatedSong.filePath))
         songPlayer.prepare()
@@ -106,6 +139,19 @@ class SongPlayerViewModel @Inject constructor(
         viewModelScope.launch {
             songDao.update(updatedSong)
         }
+    }
+
+    fun addQueue(song: Song) {
+        val updatedQueue = _songQueue.value.toMutableList()
+        updatedQueue.add(song)
+        _songQueue.value = updatedQueue
+        _isQueueEmpty.value = _songQueue.value.isEmpty()
+        Log.d("SongPlayer", "Added song to queue: ${song.title}")
+        if (currentIndex == -1) {
+            currentIndex = 0
+            playAtIndex(currentIndex)
+        }
+        Log.d("SongPlayer", "Current queue: ${_songQueue.value.map { it.title }}")
     }
     fun togglePlayPause() {
         if (songPlayer.isPlaying) {
@@ -119,28 +165,28 @@ class SongPlayerViewModel @Inject constructor(
 
     fun stopSong() {
         songPlayer.stop()
-    }
-
-    fun resetHasSongEnded() {
-        _hasSongEnded.value = false
+        _currentSong.value = null
+        _songQueue.value = emptyList()
+        _isQueueEmpty.value = true
     }
 
     fun nextSong() {
-        viewModelScope.launch {
-            val currentID = _currentSong.value?.songId
-            val nextSong = currentID?.let { songDao.getNextSong(it, tokenManager.getCurrentUserID()) }
-                ?: return@launch
-            playSong(nextSong)
+        val queue = _songQueue.value
+        if (queue.isEmpty() || currentIndex >= queue.lastIndex) {
+            if (_repeatMode.value == RepeatMode.ALL) {
+                playAtIndex(0)
+            }
+            return
         }
+        Log.d("SongPlayer", "Playing current song: ${queue[currentIndex].title}")
+        playAtIndex(currentIndex + 1)
+        Log.d("SongPlayer", "Playing next song: ${queue[currentIndex].title}")
     }
 
     fun previousSong() {
-        viewModelScope.launch {
-            val currentID = _currentSong.value?.songId
-            val previousSong = currentID?.let { songDao.getPreviousSong(it, tokenManager.getCurrentUserID()) }
-                ?: return@launch
-            playSong(previousSong)
-        }
+        val queue = _songQueue.value
+        if (queue.isEmpty() || currentIndex <= 0) return
+        playAtIndex(currentIndex - 1)
     }
 
     fun seekTo(position: Long) {
@@ -183,6 +229,30 @@ class SongPlayerViewModel @Inject constructor(
             Log.d("SongPlayer", "Toggled favorite for song: ${updatedSong.title}, isLiked: ${updatedSong.isLiked}")
         }
     }
+    fun toggleShuffle() {
+        _isShuffleEnabled.value = !_isShuffleEnabled.value
+        if (_isShuffleEnabled.value) {
+            Log.d("SongPlayer", "Shuffling song queue")
+            _songQueue.value = _songQueue.value.shuffled()
+            Log.d("SongPlayer", "Shuffled song queue: ${_songQueue.value.map { it.title }}")
+            Log.d("SongPlayer", "Current index: $currentIndex")
+            currentIndex = _songQueue.value.indexOf(_currentSong.value)
+            Log.d("SongPlayer", "New current index: $currentIndex")
+        } else {
+            _songQueue.value = _songQueue.value.sortedBy { it.lastPlayed }
+            Log.d("SongPlayer", "Unshuffled song queue: ${_songQueue.value.map { it.title }}")
+            currentIndex = _songQueue.value.indexOf(_currentSong.value)
+        }
+    }
+
+    fun toggleRepeatMode() {
+        _repeatMode.value = when (_repeatMode.value) {
+            RepeatMode.OFF -> RepeatMode.ONE
+            RepeatMode.ONE -> RepeatMode.ALL
+            RepeatMode.ALL -> RepeatMode.OFF
+        }
+        Log.d("SongPlayer", "Repeat mode changed to: ${_repeatMode.value}")
+    }
 
     fun formatTime(milliseconds: Long): String {
         val totalSeconds = milliseconds / 1000
@@ -195,5 +265,7 @@ class SongPlayerViewModel @Inject constructor(
         super.onCleared()
         songPlayer.removeListener(playerListener)
         songPlayer.release()
+        _songQueue.value = emptyList()
+        _currentSong.value = null
     }
 }

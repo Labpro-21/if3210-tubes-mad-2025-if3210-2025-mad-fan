@@ -22,7 +22,7 @@ import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @Composable
-fun MiniPlayer(viewModel: SongPlayerViewModel = hiltViewModel(), onExpand: () -> Unit) {
+fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
     val currentSong by viewModel.currentSong.collectAsState()
     val position by viewModel.position.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()

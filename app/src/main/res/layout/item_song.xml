@@ -46,5 +46,17 @@
         app:layout_constraintTop_toBottomOf="@id/tvSongTitle"
         app:layout_constraintBottom_toBottomOf="@id/imgSongCover"
         tools:text="Artist Name" />
+    <ImageButton
+        android:id="@+id/btnAddToQueue"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/baseline_playlist_add_24"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Add to Queue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tvArtistName"
+        app:tint="@android:color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

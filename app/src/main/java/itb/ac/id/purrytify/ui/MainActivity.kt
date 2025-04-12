@@ -15,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import itb.ac.id.purrytify.ui.navigation.MainScreen
+import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import itb.ac.id.purrytify.utils.NetworkConnectivityObserver
 import itb.ac.id.purrytify.utils.ConnectionStatus
@@ -44,7 +46,7 @@ fun PurrytifyApp() {
     val context = LocalContext.current
     val connectivityObserver = remember { NetworkConnectivityObserver(context) }
     val networkStatus by connectivityObserver.observe().collectAsState(initial = ConnectionStatus.Available)
-
+    val songPlayerViewModel = hiltViewModel<SongPlayerViewModel>()
     var showNoInternetSnackbar by remember { mutableStateOf(false) }
     var showRestoredSnackbar by remember { mutableStateOf(false) }
     var previousNetworkStatus by remember { mutableStateOf<ConnectionStatus?>(null) }
@@ -77,7 +79,7 @@ fun PurrytifyApp() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            MainScreen(navController = navController)
+            MainScreen(navController = navController, songPlayerViewModel = songPlayerViewModel)
         }
 
         // Snackbar

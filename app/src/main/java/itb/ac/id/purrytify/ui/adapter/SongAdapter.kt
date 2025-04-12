@@ -3,8 +3,7 @@ package itb.ac.id.purrytify.ui.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -12,7 +11,7 @@ import com.bumptech.glide.Glide
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
 
-class SongAdapter(private val onSongClick: (Song) -> Unit) :
+class SongAdapter(private val onSongClick: (Song) -> Unit,  private val onAddToQueueClick: (Song) -> Unit) :
     ListAdapter<Song, SongAdapter.SongViewHolder>(SongDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SongViewHolder {
@@ -30,12 +29,18 @@ class SongAdapter(private val onSongClick: (Song) -> Unit) :
         private val imgSongCover: ImageView = itemView.findViewById(R.id.imgSongCover)
         private val tvSongTitle: TextView = itemView.findViewById(R.id.tvSongTitle)
         private val tvArtistName: TextView = itemView.findViewById(R.id.tvArtistName)
-
+        private val btnAddToQueue: ImageButton = itemView.findViewById(R.id.btnAddToQueue)
         init {
             itemView.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     onSongClick(getItem(position))
+                }
+            }
+            btnAddToQueue.setOnClickListener {
+                val position = adapterPosition
+                if (position != RecyclerView.NO_POSITION) {
+                    onAddToQueueClick(getItem(position))
                 }
             }
         }
@@ -51,6 +56,7 @@ class SongAdapter(private val onSongClick: (Song) -> Unit) :
                 .error(R.drawable.cover_jazz)
                 .into(imgSongCover)
         }
+
     }
 
     private class SongDiffCallback : DiffUtil.ItemCallback<Song>() {

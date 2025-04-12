@@ -23,18 +23,18 @@ import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @Composable
 fun TrackViewFragment(
-    viewModel: SongPlayerViewModel = hiltViewModel(),
+    viewModel: SongPlayerViewModel,
     onBack: () -> Unit,
 ) {
     val song by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val position by viewModel.position.collectAsState()
-    val ended by viewModel.hasSongEnded.collectAsState()
+    val ended by viewModel.isQueueEmpty.collectAsState()
 
     // Shuffle & repeat state
-    var isShuffleActive by remember { mutableStateOf(false) }
+    val isShuffleActive by viewModel.isShuffleEnabled.collectAsState()
     // Mode repeat: 0 = Off, 1 = Repeat One, 2 = Repeat All
-    var repeatMode by remember { mutableStateOf(0) }
+    val repeatMode by viewModel.repeatMode.collectAsState()
 
     LaunchedEffect(song) {
         Log.d("SongPlayer", "Song: ${viewModel.currentSong.value}")
@@ -45,7 +45,6 @@ fun TrackViewFragment(
         if (ended){
             onBack()
         }
-        viewModel.resetHasSongEnded()
     }
 
     if (song != null) {
@@ -93,19 +92,6 @@ fun TrackViewFragment(
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Add to Queue button
-                        IconButton(onClick = {
-                            // TODO: Implement add to queue functionality
-                            Log.d("SongPlayer", "Add to queue: ${song!!.title}")
-                        }) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.PlaylistAdd,
-                                contentDescription = "Add to Queue",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-
                         IconButton(onClick = viewModel::toggleFavorite) {
                             Icon(
                                 imageVector = if (song!!.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -152,9 +138,7 @@ fun TrackViewFragment(
                     // Shuffle button
                     IconButton(
                         onClick = {
-                            isShuffleActive = !isShuffleActive
-                            // TODO: Implement shuffle functionality
-                            Log.d("SongPlayer", "Shuffle: $isShuffleActive")
+                            viewModel.toggleShuffle()
                         }
                     ) {
                         Icon(
@@ -200,29 +184,20 @@ fun TrackViewFragment(
                     IconButton(
                         onClick = {
                             // Cycle modenya
-                            repeatMode = (repeatMode + 1) % 3
+                            viewModel.toggleRepeatMode()
                             // TODO: Implement repeat functionality
-                            val modeText = when (repeatMode) {
-                                0 -> "Off"
-                                1 -> "One"
-                                2 -> "All"
-                                else -> "Off"
-                            }
-                            Log.d("SongPlayer", "Repeat Mode: $modeText")
                         }
                     ) {
                         Icon(
                             imageVector = when (repeatMode) {
-                                0 -> Icons.Default.Repeat
-                                1 -> Icons.Default.RepeatOne
-                                2 -> Icons.Default.Repeat
-                                else -> Icons.Default.Repeat
+                                SongPlayerViewModel.RepeatMode.OFF -> Icons.Default.Repeat
+                                SongPlayerViewModel.RepeatMode.ONE -> Icons.Default.RepeatOne
+                                SongPlayerViewModel.RepeatMode.ALL -> Icons.Default.Repeat
                             },
                             contentDescription = "Repeat",
                             tint = when (repeatMode) {
-                                0 -> Color.Gray
-                                1, 2 -> Color.White
-                                else -> Color.Gray
+                                SongPlayerViewModel.RepeatMode.OFF -> Color.Gray
+                                SongPlayerViewModel.RepeatMode.ONE, SongPlayerViewModel.RepeatMode.ALL -> Color.White
                             },
                             modifier = Modifier.size(28.dp)
                         )

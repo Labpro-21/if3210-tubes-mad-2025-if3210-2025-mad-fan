@@ -20,10 +20,9 @@ import itb.ac.id.purrytify.ui.player.*
 import itb.ac.id.purrytify.ui.profile.ProfileScreen
 
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavHostController, songPlayerViewModel: SongPlayerViewModel) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
-    val songPlayerViewModel = hiltViewModel<SongPlayerViewModel>()
     val currentSong by songPlayerViewModel.currentSong.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {

@@ -61,7 +61,10 @@ fun MainScreen(navController: NavHostController) {
 fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: NavHostController) {
     NavHost(navController = navController, startDestination = NavigationItem.Home.route) {
         composable(NavigationItem.Home.route) {
-            HomeFragment()
+            HomeFragment(songPlayerViewModel = songPlayerViewModel, onPlay = {
+                songPlayerViewModel.setLastScreenRoute(NavigationItem.Home.route)
+                navController.navigate("track_view")
+            })
         }
         composable(NavigationItem.Library.route) {
             LibraryScreen(songPlayerViewModel, onPlay = {

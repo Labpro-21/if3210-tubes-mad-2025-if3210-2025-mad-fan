@@ -22,14 +22,14 @@ import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @Composable
 fun TrackViewFragment(
-    viewModel: SongPlayerViewModel = hiltViewModel(),
+    viewModel: SongPlayerViewModel,
     onBack: () -> Unit,
 ) {
     val song by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val position by viewModel.position.collectAsState()
 //    val isFavorite by viewModel.isLiked.collectAsState()
-    val ended by viewModel.hasSongEnded.collectAsState()
+    val ended by viewModel.isQueueEmpty.collectAsState()
     LaunchedEffect(song) {
         Log.d("SongPlayer", "Song: ${viewModel.currentSong.value}")
     }
@@ -38,7 +38,6 @@ fun TrackViewFragment(
         if (ended){
             onBack()
         }
-        viewModel.resetHasSongEnded()
     }
     if (song != null) {
         Box(

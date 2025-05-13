@@ -1,10 +1,14 @@
 package itb.ac.id.purrytify.ui.player
 
 import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem.fromUri
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -12,6 +16,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.local.dao.SongDao
 import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.service.NotificationService
 import itb.ac.id.purrytify.ui.navigation.NavigationItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
+import android.os.Build
 
 @HiltViewModel
 class SongPlayerViewModel @Inject constructor(
@@ -26,7 +32,6 @@ class SongPlayerViewModel @Inject constructor(
     private val songDao: SongDao,
     private val tokenManager: TokenManager
 ) : AndroidViewModel(application){
-
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
 
@@ -57,6 +62,32 @@ class SongPlayerViewModel @Inject constructor(
     // Untuk store route last screen
     private var lastScreenRoute: String = NavigationItem.Home.route
 
+    // Notification service
+    private var notificationService: NotificationService? = null
+    private var serviceBound = false
+
+    val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+            val binder = service as NotificationService.NotificationBinder
+            notificationService = binder.getService()
+            notificationService?.setPlayer(songPlayer)
+            serviceBound = true
+
+            currentSong.value?.let {
+                notificationService?.updateCurrentSong(it)
+            }
+
+            if (application is NotificationService.PlayerCallback) {
+                notificationService?.setPlayerCallback(application as NotificationService.PlayerCallback)
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName?) {
+            notificationService = null
+            serviceBound = false
+        }
+    }
+
     fun setLastScreenRoute(route: String) {
         lastScreenRoute = route
     }
@@ -70,13 +101,16 @@ class SongPlayerViewModel @Inject constructor(
     private val playerListener = object : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _isPlaying.value = isPlaying
+            viewModelScope.launch {
+                notificationService?.updateNotification()
+            }
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             when (playbackState) {
                 Player.STATE_READY -> {
                     checkUpdateDuration()
-                    Log.d("SongPlayer", "Playing song: ${_currentSong.value?.title}")
+                    notificationService?.updateNotification()
                 }
                 Player.STATE_ENDED -> {
                     if (_repeatMode.value == RepeatMode.ONE) {
@@ -89,19 +123,16 @@ class SongPlayerViewModel @Inject constructor(
                             _isQueueEmpty.value = true
                             songPlayer.stop()
                             _currentSong.value = null
+                            stopNotificationService()
                             Log.d("SongPlayer", "Queue finished, no more songs to play.")
                         } else {
                             nextSong()
                         }
                     }
                 }
-
                 Player.STATE_BUFFERING -> {
-
                 }
-
                 Player.STATE_IDLE -> {
-
                 }
             }
         }
@@ -110,6 +141,43 @@ class SongPlayerViewModel @Inject constructor(
     init {
         songPlayer.addListener(playerListener)
         startUpdatingPosition()
+        bindNotificationService()
+    }
+
+    private fun bindNotificationService() {
+        val intent = Intent(application, NotificationService::class.java)
+        application.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
+    }
+
+    private fun startNotificationService() {
+        if (!serviceBound) {
+            bindNotificationService()
+        }
+
+        val intent = Intent(application, NotificationService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            application.startForegroundService(intent)
+        } else {
+            application.startService(intent)
+        }
+
+        currentSong.value?.let {
+            notificationService?.updateCurrentSong(it)
+        }
+    }
+
+    private fun stopNotificationService() {
+        if (serviceBound) {
+            try {
+                application.unbindService(serviceConnection)
+                serviceBound = false
+            } catch (e: Exception) {
+                Log.e("SongPlayerViewModel", "Error unbinding service: ${e.message}")
+            }
+        }
+
+        val intent = Intent(application, NotificationService::class.java)
+        application.stopService(intent)
     }
 
     fun playSong(song: Song) {
@@ -123,18 +191,17 @@ class SongPlayerViewModel @Inject constructor(
         if (index < 0 || index >= _songQueue.value.size) return
         val originalSong = _songQueue.value[index]
         val updatedSong = originalSong.copy(lastPlayed = System.currentTimeMillis())
-
-
         val newQueue = _songQueue.value.toMutableList()
         newQueue[index] = updatedSong
         _songQueue.value = newQueue
-
         currentIndex = index
         _currentSong.value = updatedSong
-
         songPlayer.setMediaItem(fromUri(updatedSong.filePath))
         songPlayer.prepare()
         songPlayer.play()
+
+        // Update notification
+        notificationService?.updateCurrentSong(updatedSong)
 
         viewModelScope.launch {
             songDao.update(updatedSong)
@@ -153,6 +220,7 @@ class SongPlayerViewModel @Inject constructor(
         }
         Log.d("SongPlayer", "Current queue: ${_songQueue.value.map { it.title }}")
     }
+
     fun togglePlayPause() {
         if (songPlayer.isPlaying) {
             songPlayer.pause()
@@ -168,6 +236,8 @@ class SongPlayerViewModel @Inject constructor(
         _currentSong.value = null
         _songQueue.value = emptyList()
         _isQueueEmpty.value = true
+
+        stopNotificationService()
     }
 
     fun nextSong() {
@@ -192,6 +262,7 @@ class SongPlayerViewModel @Inject constructor(
     fun seekTo(position: Long) {
         songPlayer.seekTo(position)
     }
+
     private fun startUpdatingPosition() {
         viewModelScope.launch {
             while (true) {
@@ -220,15 +291,16 @@ class SongPlayerViewModel @Inject constructor(
             } else {
                 currentSong.copy(isLiked = true)
             }
-
             // Update the song in the database
             songDao.update(updatedSong)
-
             // Update the local state
             _currentSong.value = updatedSong
+            // Update notification
+            notificationService?.updateCurrentSong(updatedSong)
             Log.d("SongPlayer", "Toggled favorite for song: ${updatedSong.title}, isLiked: ${updatedSong.isLiked}")
         }
     }
+
     fun toggleShuffle() {
         _isShuffleEnabled.value = !_isShuffleEnabled.value
         if (_isShuffleEnabled.value) {
@@ -267,6 +339,9 @@ class SongPlayerViewModel @Inject constructor(
         songPlayer.release()
         _songQueue.value = emptyList()
         _currentSong.value = null
+
+        // Unbind dan stop notification service
+        stopNotificationService()
     }
 
     fun deleteSong() {
@@ -277,5 +352,7 @@ class SongPlayerViewModel @Inject constructor(
         _isPlaying.value = false
         _position.value = 0L
         songPlayer.stop()
+
+        stopNotificationService()
     }
 }

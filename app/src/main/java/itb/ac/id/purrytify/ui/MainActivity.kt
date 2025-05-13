@@ -1,5 +1,9 @@
 package itb.ac.id.purrytify.ui
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -18,24 +22,104 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import itb.ac.id.purrytify.service.NotificationService
 import itb.ac.id.purrytify.ui.navigation.MainScreen
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
-import itb.ac.id.purrytify.utils.NetworkConnectivityObserver
 import itb.ac.id.purrytify.utils.ConnectionStatus
+import itb.ac.id.purrytify.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import android.os.Build
 
 @AndroidEntryPoint
-class MainActivity: AppCompatActivity() {
+class MainActivity: AppCompatActivity(), NotificationService.PlayerCallback {
+
+    private lateinit var songPlayerViewModel: SongPlayerViewModel
+    private val musicControlReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == NotificationService.ACTION_MUSIC_CONTROL) {
+                val command = intent.getStringExtra("command")
+                when (command) {
+                    NotificationService.ACTION_PLAY,
+                    NotificationService.ACTION_PAUSE -> {
+                        songPlayerViewModel.togglePlayPause()
+                    }
+                    NotificationService.ACTION_NEXT -> {
+                        songPlayerViewModel.nextSong()
+                    }
+                    NotificationService.ACTION_PREVIOUS -> {
+                        songPlayerViewModel.previousSong()
+                    }
+                    NotificationService.ACTION_STOP -> {
+                        songPlayerViewModel.stopSong()
+                    }
+                }
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // enableEdgeToEdge() // Biar aplikasi penuh sampe ke status bar
         super.onCreate(savedInstanceState)
-        setContent {
+
+        // Register broadcast receiver
+        val intentFilter = IntentFilter(NotificationService.ACTION_MUSIC_CONTROL)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(musicControlReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(musicControlReceiver, intentFilter)
+        }
+
+                setContent {
             PurrytifyTheme {
+                songPlayerViewModel = hiltViewModel<SongPlayerViewModel>()
                 PurrytifyApp()
             }
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unregister receiver
+        unregisterReceiver(musicControlReceiver)
+    }
+
+    private fun handleMusicControl(command: String?) {
+        when (command) {
+            NotificationService.ACTION_PLAY -> {
+                songPlayerViewModel.togglePlayPause()
+            }
+            NotificationService.ACTION_PAUSE -> {
+                songPlayerViewModel.togglePlayPause()
+            }
+            NotificationService.ACTION_NEXT -> {
+                songPlayerViewModel.nextSong()
+            }
+            NotificationService.ACTION_PREVIOUS -> {
+                songPlayerViewModel.previousSong()
+            }
+            NotificationService.ACTION_STOP -> {
+                songPlayerViewModel.stopSong()
+            }
+        }
+    }
+
+    // player callback
+    override fun onPlayPause() {
+        songPlayerViewModel.togglePlayPause()
+    }
+
+    override fun onNext() {
+        songPlayerViewModel.nextSong()
+    }
+
+    override fun onPrevious() {
+        songPlayerViewModel.previousSong()
+    }
+
+    override fun onStop() {
+        super.onStop()
     }
 }
 
@@ -69,7 +153,6 @@ fun PurrytifyApp() {
             }
             else -> {}
         }
-
         previousNetworkStatus = networkStatus
     }
 

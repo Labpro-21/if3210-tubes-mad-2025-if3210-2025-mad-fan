@@ -13,7 +13,9 @@ import android.graphics.BitmapFactory
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -24,26 +26,28 @@ import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.MainActivity
 import java.io.File
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 class NotificationService : Service() {
-
     companion object {
         private const val CHANNEL_ID = "purrytify_playback_channel"
         private const val NOTIFICATION_ID = 1
-
         const val ACTION_PLAY = "itb.ac.id.purrytify.ACTION_PLAY"
         const val ACTION_PAUSE = "itb.ac.id.purrytify.ACTION_PAUSE"
         const val ACTION_PREVIOUS = "itb.ac.id.purrytify.ACTION_PREVIOUS"
         const val ACTION_NEXT = "itb.ac.id.purrytify.ACTION_NEXT"
         const val ACTION_STOP = "itb.ac.id.purrytify.ACTION_STOP"
-
         const val ACTION_MUSIC_CONTROL = "itb.ac.id.purrytify.ACTION_MUSIC_CONTROL"
+        const val ACTION_SEEK = "itb.ac.id.purrytify.ACTION_SEEK"
     }
 
     private var player: ExoPlayer? = null
     private lateinit var mediaSession: MediaSessionCompat
     private var currentSong: Song? = null
     private val binder = NotificationBinder()
+    private var progressUpdateExecutor: ScheduledExecutorService? = null
 
     interface PlayerCallback {
         fun onPlayPause()
@@ -70,6 +74,43 @@ class NotificationService : Service() {
         super.onCreate()
         createNotificationChannel()
         mediaSession = MediaSessionCompat(this, "PurrytifyMediaSession")
+        setupMediaSession()
+    }
+
+    private fun setupMediaSession() {
+        mediaSession.setCallback(object : MediaSessionCompat.Callback() {
+            override fun onPlay() {
+//                player?.play()
+                playerCallback?.onPlayPause()
+//                log
+                Log.d("NotificationService", "Play Clicked (setupMediaSession)")
+            }
+
+            override fun onPause() {
+//                player?.pause()
+                playerCallback?.onPlayPause()
+//                log
+                Log.d("NotificationService", "Pause Clicked (setupMediaSession)")
+            }
+
+            override fun onSkipToNext() {
+                playerCallback?.onNext()
+//                log
+                Log.d("NotificationService", "Next Clicked (setupMediaSession)")
+            }
+
+            override fun onSkipToPrevious() {
+                playerCallback?.onPrevious()
+//                log
+                Log.d("NotificationService", "Previous Clicked (setupMediaSession)")
+            }
+
+            override fun onSeekTo(pos: Long) {
+                player?.seekTo(pos)
+            }
+        })
+
+        mediaSession.isActive = true
     }
 
     private fun createNotificationChannel() {
@@ -89,34 +130,89 @@ class NotificationService : Service() {
     fun setPlayer(exoPlayer: ExoPlayer) {
         this.player = exoPlayer
         setupPlayerListener()
+        startProgressUpdates()
     }
 
     private fun setupPlayerListener() {
         player?.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 updateNotification()
+
+                if (isPlaying) {
+                    startProgressUpdates()
+                } else {
+                    stopProgressUpdates()
+                }
             }
 
             override fun onPlaybackStateChanged(playbackState: Int) {
                 if (playbackState == Player.STATE_ENDED) {
                     stopForeground(true)
+                    stopProgressUpdates()
                 }
             }
         })
     }
 
+    private fun startProgressUpdates() {
+        stopProgressUpdates()
+
+        progressUpdateExecutor = Executors.newSingleThreadScheduledExecutor()
+        progressUpdateExecutor?.scheduleAtFixedRate({
+            updateNotification()
+        }, 0, 1000, TimeUnit.MILLISECONDS)
+    }
+
+    private fun stopProgressUpdates() {
+        progressUpdateExecutor?.shutdown()
+        progressUpdateExecutor = null
+    }
+
     fun updateCurrentSong(song: Song?) {
         currentSong = song
+        updateMediaSessionMetadata()
         updateNotification()
+    }
+
+    private fun updateMediaSessionMetadata() {
+        val song = currentSong ?: return
+
+        val metadataBuilder = MediaMetadataCompat.Builder()
+            .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
+            .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
+            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.duration)
+
+        val albumArt = loadAlbumArt(song.imagePath)
+        if (albumArt != null) {
+            metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
+        }
+
+        mediaSession.setMetadata(metadataBuilder.build())
     }
 
     fun updateNotification() {
         val song = currentSong ?: return
         val isPlaying = player?.isPlaying ?: false
+        val currentPosition = player?.currentPosition ?: 0L
+        val duration = song.duration
 
-        Log.d("NotificationService", "Updating notification, isPlaying: ${player?.isPlaying}")
+        val playbackStateBuilder = PlaybackStateCompat.Builder()
+            .setActions(
+                PlaybackStateCompat.ACTION_PLAY or
+                        PlaybackStateCompat.ACTION_PAUSE or
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                        PlaybackStateCompat.ACTION_SEEK_TO
+            )
+            .setState(
+                if (isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
+                currentPosition,
+                1.0f
+            )
 
+        mediaSession.setPlaybackState(playbackStateBuilder.build())
 
+        Log.d("NotificationService", "Updating notification, isPlaying: ${player?.isPlaying}, position: $currentPosition/$duration")
 
         val playPauseAction = NotificationCompat.Action.Builder(
             if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play,
@@ -124,11 +220,7 @@ class NotificationService : Service() {
             createPendingIntent(if (isPlaying) ACTION_PAUSE else ACTION_PLAY)
         ).build()
 
-        // log
-        Log.d("NotificationService", "PlayPauseAction: ${playPauseAction.title}")
-
         val albumArt = loadAlbumArt(song.imagePath)
-//        log imagepath
         Log.d("NotificationService", "ImagePath: ${song.imagePath}")
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -145,7 +237,10 @@ class NotificationService : Service() {
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
                     .setShowActionsInCompactView(0, 1, 2)
+                    .setShowCancelButton(true)
+                    .setCancelButtonIntent(createPendingIntent(ACTION_STOP))
             )
+            .setProgress(duration.toInt(), currentPosition.toInt(), false)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setContentIntent(createContentIntent())
@@ -157,7 +252,6 @@ class NotificationService : Service() {
 
     private fun loadAlbumArt(imagePath: String): Bitmap {
         val defaultBitmap = BitmapFactory.decodeResource(resources, R.drawable.logo)
-
         if (imagePath.isEmpty()) {
             return defaultBitmap
         }
@@ -186,8 +280,11 @@ class NotificationService : Service() {
     private fun createPendingIntent(action: String): PendingIntent {
         val intent = Intent(this, NotificationReceiver::class.java).apply {
             this.action = action
-            putExtra("unique_key", System.currentTimeMillis())
+            putExtra("timestamp", System.currentTimeMillis())
         }
+
+        Log.d("NotificationService", "Creating PendingIntent for action: $action with requestCode: ${getRequestCode(action)}")
+
         return PendingIntent.getBroadcast(
             this,
             getRequestCode(action),
@@ -203,6 +300,7 @@ class NotificationService : Service() {
             ACTION_PREVIOUS -> 102
             ACTION_NEXT -> 103
             ACTION_STOP -> 104
+            ACTION_SEEK -> 105
             else -> 0
         }
     }
@@ -220,20 +318,33 @@ class NotificationService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d("NotificationService", "onStartCommand received, action: ${intent?.action}")
+
         if (intent?.action != null) {
-            handleAction(intent.action!!)
+            handleAction(intent.action!!, intent)
         }
         return START_NOT_STICKY
     }
 
-    private fun handleAction(action: String) {
+    private fun handleAction(action: String, intent: Intent?) {
+        Log.d("NotificationService", "Handling action: $action")
+
         when (action) {
-            // Broadcast intent ke MainActivity
+            ACTION_SEEK -> {
+                intent?.getLongExtra("position", -1L)?.let { position: Long ->
+                    if (position >= 0) {
+                        player?.seekTo(position)
+                        updateNotification()
+                    }
+                }
+            }
             ACTION_PLAY, ACTION_PAUSE -> {
                 player?.let {
                     if (it.isPlaying) {
+                        Log.d("NotificationService", "Pause action triggered")
                         it.pause()
                     } else {
+                        Log.d("NotificationService", "Play action triggered")
                         it.play()
                     }
                     updateNotification()
@@ -242,10 +353,12 @@ class NotificationService : Service() {
                 sendActionToActivity(action)
             }
             ACTION_NEXT -> {
+                Log.d("NotificationService", "Next action triggered in handleAction")
                 playerCallback?.onNext()
                 sendActionToActivity(ACTION_NEXT)
             }
             ACTION_PREVIOUS -> {
+                Log.d("NotificationService", "Previous action triggered in handleAction")
                 playerCallback?.onPrevious()
                 sendActionToActivity(ACTION_PREVIOUS)
             }
@@ -268,6 +381,7 @@ class NotificationService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        stopProgressUpdates()
         player = null
         mediaSession.release()
     }

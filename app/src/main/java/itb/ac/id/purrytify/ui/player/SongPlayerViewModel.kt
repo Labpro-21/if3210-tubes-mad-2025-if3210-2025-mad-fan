@@ -72,14 +72,29 @@ class SongPlayerViewModel @Inject constructor(
             notificationService = binder.getService()
             notificationService?.setPlayer(songPlayer)
             serviceBound = true
-
             currentSong.value?.let {
                 notificationService?.updateCurrentSong(it)
             }
 
-            if (application is NotificationService.PlayerCallback) {
-                notificationService?.setPlayerCallback(application as NotificationService.PlayerCallback)
-            }
+            notificationService?.setPlayerCallback(object : NotificationService.PlayerCallback {
+                override fun onPlayPause() {
+                    togglePlayPause()
+                }
+
+                override fun onNext() {
+                    Log.d("SongPlayerViewModel", "onNext callback triggered")
+                    nextSong()
+                }
+
+                override fun onPrevious() {
+                    Log.d("SongPlayerViewModel", "onPrevious callback triggered")
+                    previousSong()
+                }
+
+                override fun onStop() {
+                    stopSong()
+                }
+            })
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {

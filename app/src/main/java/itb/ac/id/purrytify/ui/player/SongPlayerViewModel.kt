@@ -26,6 +26,8 @@ import java.util.Locale
 import javax.inject.Inject
 import android.os.Build
 import androidx.media3.common.MediaItem
+import itb.ac.id.purrytify.data.model.OnlineSongResponse
+import itb.ac.id.purrytify.data.model.toSong
 
 @HiltViewModel
 class SongPlayerViewModel @Inject constructor(
@@ -201,6 +203,18 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun playSong(song: Song) {
+//        val song = OnlineSongResponse(
+//            id = 71,
+//            title = "Die With A Smile",
+//            artist = "Lady Gaga, Bruno Mars",
+//            artwork = "https://storage.googleapis.com/mad-public-bucket/cover/Die%20With%20A%20Smile.png",
+//            url = "https://storage.googleapis.com/mad-public-bucket/mp3/Lady%20Gaga%2C%20Bruno%20Mars%20-%20Die%20With%20A%20Smile%20(Lyrics).mp3",
+//            duration = "4:12",
+//            country = "GLOBAL",
+//            rank = 1,
+//            createdAt = "2025-05-08T02:16:53.192Z",
+//            updatedAt = "2025-05-08T02:16:53.192Z"
+//        ).toSong(userId = 1)
         _songQueue.value = listOf(song)
         _isQueueEmpty.value = _songQueue.value.isEmpty()
         currentIndex = 0
@@ -225,7 +239,9 @@ class SongPlayerViewModel @Inject constructor(
         notificationService?.updateCurrentSong(updatedSong)
 
         viewModelScope.launch {
-            songDao.update(updatedSong)
+            if (!updatedSong.isOnline) {
+                songDao.update(updatedSong)
+            }
         }
     }
 
@@ -298,7 +314,9 @@ class SongPlayerViewModel @Inject constructor(
         if (song.duration == 0L && songPlayer.duration > 0) {
             viewModelScope.launch {
                 val updatedSong = song.copy(duration = songPlayer.duration)
-                songDao.update(updatedSong)
+                if (!updatedSong.isOnline) {
+                    songDao.update(updatedSong)
+                }
                 _currentSong.value = updatedSong
             }
         }
@@ -307,9 +325,12 @@ class SongPlayerViewModel @Inject constructor(
     fun toggleFavorite() {
         val currentSong = _currentSong.value ?: return
         viewModelScope.launch {
+
             val updatedSong = currentSong.copy(isLiked = !currentSong.isLiked)
             // Update the song in the database
-            songDao.update(updatedSong)
+            if (!updatedSong.isOnline) {
+                songDao.update(updatedSong)
+            }
             // Update the local state
             _currentSong.value = updatedSong
             // Update the song in the queue
@@ -370,7 +391,11 @@ class SongPlayerViewModel @Inject constructor(
 
     fun deleteSong() {
         viewModelScope.launch {
-            _currentSong.value?.let { songDao.delete(it) }
+            _currentSong.value?.let {
+                if (!it.isOnline) {
+                    songDao.delete(it)
+                }
+            }
         }
         _currentSong.value = null
         _isPlaying.value = false

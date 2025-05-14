@@ -4,8 +4,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,6 +53,13 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                         Text(currentSong!!.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                         Text(currentSong!!.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                     }
+                    IconButton(onClick = { viewModel.previousSong() }) {
+                        Icon(
+                            Icons.Default.SkipPrevious,
+                            contentDescription = "Previous",
+                            tint = Color.White
+                        )
+                    }
                     IconButton(onClick = {
                         viewModel.togglePlayPause()
                     }) {
@@ -61,6 +67,13 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                             imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                             tint = Color.White,
                             contentDescription = "Play/Pause"
+                        )
+                    }
+                    IconButton(onClick = { viewModel.nextSong() }) {
+                        Icon(
+                            Icons.Default.SkipNext,
+                            contentDescription = "Next",
+                            tint = Color.White
                         )
                     }
                 }

@@ -1,5 +1,4 @@
 package itb.ac.id.purrytify.service
-
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -12,6 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Binder
 import android.os.Build
+import android.os.Bundle
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
@@ -41,6 +41,7 @@ class NotificationService : Service() {
         const val ACTION_STOP = "itb.ac.id.purrytify.ACTION_STOP"
         const val ACTION_MUSIC_CONTROL = "itb.ac.id.purrytify.ACTION_MUSIC_CONTROL"
         const val ACTION_SEEK = "itb.ac.id.purrytify.ACTION_SEEK"
+        const val ACTION_TOGGLE_FAVORITE = "itb.ac.id.purrytify.ACTION_TOGGLE_FAVORITE"
     }
 
     private var player: ExoPlayer? = null
@@ -54,6 +55,7 @@ class NotificationService : Service() {
         fun onNext()
         fun onPrevious()
         fun onStop()
+        fun onToggleFavorite()
     }
 
     private var playerCallback: PlayerCallback? = null
@@ -80,33 +82,41 @@ class NotificationService : Service() {
     private fun setupMediaSession() {
         mediaSession.setCallback(object : MediaSessionCompat.Callback() {
             override fun onPlay() {
-//                player?.play()
+
                 playerCallback?.onPlayPause()
-//                log
+
                 Log.d("NotificationService", "Play Clicked (setupMediaSession)")
             }
 
             override fun onPause() {
-//                player?.pause()
+
                 playerCallback?.onPlayPause()
-//                log
+
                 Log.d("NotificationService", "Pause Clicked (setupMediaSession)")
             }
 
             override fun onSkipToNext() {
                 playerCallback?.onNext()
-//                log
+
                 Log.d("NotificationService", "Next Clicked (setupMediaSession)")
             }
 
             override fun onSkipToPrevious() {
                 playerCallback?.onPrevious()
-//                log
+
                 Log.d("NotificationService", "Previous Clicked (setupMediaSession)")
             }
 
             override fun onSeekTo(pos: Long) {
                 player?.seekTo(pos)
+            }
+            override fun onCustomAction(action: String, extras: Bundle?) {
+                when (action) {
+                    ACTION_TOGGLE_FAVORITE -> {
+                        Log.d("NotificationService", "Favorite clicked from media session callback")
+                        playerCallback?.onToggleFavorite()
+                    }
+                }
             }
         })
 
@@ -196,6 +206,12 @@ class NotificationService : Service() {
         val currentPosition = player?.currentPosition ?: 0L
         val duration = song.duration
 
+        val customFavoriteAction = PlaybackStateCompat.CustomAction.Builder(
+            ACTION_TOGGLE_FAVORITE,
+            if (song.isLiked) "Remove from Favorites" else "Add to Favorites",
+            if (song.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+        ).build()
+
         val playbackStateBuilder = PlaybackStateCompat.Builder()
             .setActions(
                 PlaybackStateCompat.ACTION_PLAY or
@@ -209,6 +225,7 @@ class NotificationService : Service() {
                 currentPosition,
                 1.0f
             )
+            .addCustomAction(customFavoriteAction)
 
         mediaSession.setPlaybackState(playbackStateBuilder.build())
 
@@ -220,23 +237,30 @@ class NotificationService : Service() {
             createPendingIntent(if (isPlaying) ACTION_PAUSE else ACTION_PLAY)
         ).build()
 
+        val favoriteAction = NotificationCompat.Action.Builder(
+            if (song.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border,
+            if (song.isLiked) "Remove from Favorites" else "Add to Favorites",
+            createPendingIntent(ACTION_TOGGLE_FAVORITE)
+        ).build()
+
         val albumArt = loadAlbumArt(song.imagePath)
         Log.d("NotificationService", "ImagePath: ${song.imagePath}")
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(song.title)
             .setContentText(song.artist)
-            .setSmallIcon(R.drawable.ic_music_note)
+            .setSmallIcon(R.drawable.logo)
             .setLargeIcon(albumArt)
             .setOnlyAlertOnce(true)
             .setShowWhen(false)
             .addAction(R.drawable.ic_previous, "Previous", createPendingIntent(ACTION_PREVIOUS))
             .addAction(playPauseAction)
             .addAction(R.drawable.ic_next, "Next", createPendingIntent(ACTION_NEXT))
+            .addAction(favoriteAction)
             .setStyle(
                 androidx.media.app.NotificationCompat.MediaStyle()
                     .setMediaSession(mediaSession.sessionToken)
-                    .setShowActionsInCompactView(0, 1, 2)
+                    .setShowActionsInCompactView(0, 1, 2, 3)
                     .setShowCancelButton(true)
                     .setCancelButtonIntent(createPendingIntent(ACTION_STOP))
             )
@@ -301,6 +325,7 @@ class NotificationService : Service() {
             ACTION_NEXT -> 103
             ACTION_STOP -> 104
             ACTION_SEEK -> 105
+            ACTION_TOGGLE_FAVORITE -> 106
             else -> 0
         }
     }
@@ -369,9 +394,13 @@ class NotificationService : Service() {
                 stopForeground(true)
                 stopSelf()
             }
+            ACTION_TOGGLE_FAVORITE -> {
+                Log.d("NotificationService", "Toggle favorite action triggered")
+                playerCallback?.onToggleFavorite()
+                sendActionToActivity(ACTION_TOGGLE_FAVORITE)
+            }
         }
     }
-
     private fun sendActionToActivity(action: String) {
         val intent = Intent(ACTION_MUSIC_CONTROL).apply {
             putExtra("command", action)

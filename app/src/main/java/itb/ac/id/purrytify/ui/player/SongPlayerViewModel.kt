@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 import android.os.Build
+import androidx.media3.common.MediaItem
 
 @HiltViewModel
 class SongPlayerViewModel @Inject constructor(
@@ -93,6 +94,10 @@ class SongPlayerViewModel @Inject constructor(
 
                 override fun onStop() {
                     stopSong()
+                }
+                override fun onToggleFavorite() {
+                    Log.d("SongPlayerViewModel", "onToggleFavorite callback triggered")
+                    toggleFavorite()
                 }
             })
         }
@@ -200,6 +205,7 @@ class SongPlayerViewModel @Inject constructor(
         _isQueueEmpty.value = _songQueue.value.isEmpty()
         currentIndex = 0
         playAtIndex(currentIndex)
+        startNotificationService()
     }
 
     private fun playAtIndex(index: Int) {
@@ -211,7 +217,7 @@ class SongPlayerViewModel @Inject constructor(
         _songQueue.value = newQueue
         currentIndex = index
         _currentSong.value = updatedSong
-        songPlayer.setMediaItem(fromUri(updatedSong.filePath))
+        songPlayer.setMediaItem(MediaItem.fromUri(updatedSong.filePath))
         songPlayer.prepare()
         songPlayer.play()
 
@@ -301,16 +307,19 @@ class SongPlayerViewModel @Inject constructor(
     fun toggleFavorite() {
         val currentSong = _currentSong.value ?: return
         viewModelScope.launch {
-            val updatedSong = if (currentSong.isLiked) {
-                currentSong.copy(isLiked = false)
-            } else {
-                currentSong.copy(isLiked = true)
-            }
+            val updatedSong = currentSong.copy(isLiked = !currentSong.isLiked)
             // Update the song in the database
             songDao.update(updatedSong)
             // Update the local state
             _currentSong.value = updatedSong
-            // Update notification
+            // Update the song in the queue
+            val index = _songQueue.value.indexOf(currentSong)
+            if (index != -1) {
+                val newQueue = _songQueue.value.toMutableList()
+                newQueue[index] = updatedSong
+                _songQueue.value = newQueue
+            }
+            // Update notification to show the new favorite status
             notificationService?.updateCurrentSong(updatedSong)
             Log.d("SongPlayer", "Toggled favorite for song: ${updatedSong.title}, isLiked: ${updatedSong.isLiked}")
         }
@@ -361,7 +370,7 @@ class SongPlayerViewModel @Inject constructor(
 
     fun deleteSong() {
         viewModelScope.launch {
-            songDao.delete(_currentSong.value!!)
+            _currentSong.value?.let { songDao.delete(it) }
         }
         _currentSong.value = null
         _isPlaying.value = false

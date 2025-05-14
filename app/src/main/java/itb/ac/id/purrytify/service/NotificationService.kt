@@ -155,15 +155,33 @@ class NotificationService : Service() {
         startForeground(NOTIFICATION_ID, notification)
     }
 
-//    TODO: ganti ke album art dari file
-private fun loadAlbumArt(imagePath: String): Bitmap {
-    val file = File(imagePath)
-    return if (file.exists()) {
-        BitmapFactory.decodeFile(imagePath)
-    } else {
-        BitmapFactory.decodeResource(resources, R.drawable.logo)
+    private fun loadAlbumArt(imagePath: String): Bitmap {
+        val defaultBitmap = BitmapFactory.decodeResource(resources, R.drawable.logo)
+
+        if (imagePath.isEmpty()) {
+            return defaultBitmap
+        }
+
+        try {
+            // URI
+            if (imagePath.startsWith("content://")) {
+                val uri = android.net.Uri.parse(imagePath)
+                val inputStream = contentResolver.openInputStream(uri)
+                return inputStream?.use { BitmapFactory.decodeStream(it) } ?: defaultBitmap
+            }
+            // file path biasa
+            else {
+                val file = File(imagePath)
+                if (file.exists()) {
+                    return BitmapFactory.decodeFile(imagePath) ?: defaultBitmap
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("NotificationService", "Error loading album art: ${e.message}")
+        }
+
+        return defaultBitmap
     }
-}
 
     private fun createPendingIntent(action: String): PendingIntent {
         val intent = Intent(this, NotificationReceiver::class.java).apply {

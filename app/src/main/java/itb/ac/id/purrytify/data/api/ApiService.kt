@@ -24,4 +24,9 @@ interface ApiService {
     @POST("api/refresh-token")
     suspend fun refreshToken(@Body refreshToken: RefreshRequest): Response<RefreshResponse>
 
+    @GET("api/top-songs/global")
+    suspend fun getTopSongsGlobal(): Response<List<OnlineSongResponse>>
+
+    @GET("api/top-songs/{countryCode}")
+    suspend fun getTopSongsCountry(@Path("countryCode") countryCode: String): Response<List<OnlineSongResponse>>
 }

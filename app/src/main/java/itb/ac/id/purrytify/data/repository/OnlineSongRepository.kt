@@ -108,6 +108,7 @@ class OnlineSongRepository @Inject constructor(
             val imageUri = saveOnlineSongToLocal(context, song.imagePath, "${song.title}_cover", "image/jpeg")
 
             return@withContext song.copy(
+                songId = 0,
                 userID = tokenManager.getCurrentUserID(),
                 filePath = songUri.toString(),
                 imagePath = imageUri.toString(),

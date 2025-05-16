@@ -17,6 +17,7 @@ data class OnlineSongResponse(
 
 fun OnlineSongResponse.toSong(userId: Int = -1): Song {
     return Song(
+        songId = id,
         title = title,
         artist = artist,
         filePath = url, // online url instead of uri

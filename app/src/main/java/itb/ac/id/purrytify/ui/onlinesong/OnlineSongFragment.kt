@@ -98,10 +98,12 @@ fun CountrySelector(
 
     val countries = listOf(
         "Indonesia" to "ID",
+        "Malaysia" to "MY",
         "United States" to "US",
-        "Japan" to "JP",
-        "India" to "IN",
-        "Germany" to "DE"
+        "United Kingdom" to "GB",
+        "Switzerland" to "CH",
+        "Germany" to "DE",
+        "Brazil" to "BR"
     )
 
     Box {

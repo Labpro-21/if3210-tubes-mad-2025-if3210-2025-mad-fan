@@ -1,6 +1,5 @@
 package itb.ac.id.purrytify.ui.home
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,23 +30,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
-import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @Composable
 fun HomeFragment(
     viewModel: HomeViewModel = hiltViewModel(),
     songPlayerViewModel: SongPlayerViewModel,
     onPlay: () -> Unit,
-    onOnlineSong: () -> Unit
+    onOnlineSong: (path: String?) -> Unit
 ) {
     val newSongs by viewModel.newSongs.collectAsState()
     val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
@@ -66,7 +62,7 @@ fun HomeContent(
     recentlyPlayedData: List<Song>,
     songPlayerViewModel: SongPlayerViewModel,
     onPlay: () -> Unit,
-    onOnlineSong: () -> Unit
+    onOnlineSong: (path: String?) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -87,18 +83,51 @@ fun HomeContent(
             Column(
                 modifier = Modifier
                     .width(120.dp)
-                    .clickable { onOnlineSong() },
+                    .clickable { onOnlineSong("online_song_global") },
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Cover
                 Image(
-                    painter = rememberAsyncImagePainter(model = R.drawable.cover_best_interest),
-                    contentDescription = "Online Song Cover",
+                    painter = rememberAsyncImagePainter(model = R.drawable.global),
+                    contentDescription = "Global Online Song Cover",
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
                         .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text (
+                    text = "Global",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .width(120.dp)
+                    .clickable { onOnlineSong("online_song_country") },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Cover
+                Image(
+                    painter = rememberAsyncImagePainter(model = R.drawable.country),
+                    contentDescription = "Country Online Song Cover",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text (
+                    text = "Country",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }

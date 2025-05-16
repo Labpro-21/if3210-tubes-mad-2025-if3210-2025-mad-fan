@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import itb.ac.id.purrytify.ui.home.HomeFragment
@@ -61,14 +60,17 @@ fun MainScreen(navController: NavHostController, songPlayerViewModel: SongPlayer
 fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: NavHostController) {
     NavHost(navController = navController, startDestination = NavigationItem.Home.route) {
         composable(NavigationItem.Home.route) {
-            HomeFragment(songPlayerViewModel = songPlayerViewModel,
+            HomeFragment(
+                songPlayerViewModel = songPlayerViewModel,
                 onPlay = {
                     songPlayerViewModel.setLastScreenRoute(NavigationItem.Home.route)
                     navController.navigate("track_view")
                 },
-                onOnlineSong = {
+                onOnlineSong = { path ->
                     songPlayerViewModel.setLastScreenRoute(NavigationItem.Home.route)
-                    navController.navigate("online_song_country")
+                    if (path != null) {
+                        navController.navigate(path)
+                    }
                 })
         }
         composable(NavigationItem.Library.route) {

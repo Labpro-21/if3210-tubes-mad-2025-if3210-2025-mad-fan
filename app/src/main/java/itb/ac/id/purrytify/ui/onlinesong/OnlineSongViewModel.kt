@@ -1,9 +1,12 @@
 package itb.ac.id.purrytify.ui.onlinesong
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.*
 import dagger.hilt.android.lifecycle.HiltViewModel
+import itb.ac.id.purrytify.data.local.dao.SongDao
+import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.data.model.OnlineSongResponse
 import itb.ac.id.purrytify.data.repository.OnlineSongRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class OnlineSongViewModel @Inject constructor(
     private val onlineSongRepository: OnlineSongRepository,
+    private val songDao: SongDao
 ) : ViewModel() {
 
     private val _onlineSongs = MutableStateFlow<List<OnlineSongResponse>>(emptyList())
@@ -47,6 +51,19 @@ class OnlineSongViewModel @Inject constructor(
                 _onlineSongs.value = emptyList()
                 Log.e("OnlineSongViewModel", "Error fetching online songs country", e)
             }
+        }
+    }
+
+    fun downloadSong(context: Context, song: Song){
+        viewModelScope.launch {
+            val newSong = onlineSongRepository.downloadSongAndCover(context, song)
+            Log.d("OnlineSongViewModel", "Song downloaded successfully: ${newSong.title}")
+            Log.d("OnlineSongViewModel", "Song downloaded successfully: ${newSong.filePath}")
+            Log.d("OnlineSongViewModel", "Song downloaded successfully: ${newSong.imagePath}")
+            Log.d("OnlineSongViewModel", "Song downloaded successfully: $newSong")
+
+            val id = songDao.insert(newSong)
+            Log.d("OnlineSongViewModel", "Song inserted successfully: $id")
         }
     }
 }

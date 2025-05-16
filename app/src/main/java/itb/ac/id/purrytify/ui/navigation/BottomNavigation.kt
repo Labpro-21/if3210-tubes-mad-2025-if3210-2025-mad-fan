@@ -1,6 +1,7 @@
 package itb.ac.id.purrytify.ui.navigation
 
 //import itb.ac.id.purrytify.ui.library.LibraryFragment
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,11 +21,20 @@ import itb.ac.id.purrytify.ui.player.*
 import itb.ac.id.purrytify.ui.profile.ProfileScreen
 
 @Composable
-fun MainScreen(navController: NavHostController, songPlayerViewModel: SongPlayerViewModel) {
+fun MainScreen(navController: NavHostController, songPlayerViewModel: SongPlayerViewModel, deepLink: Uri?) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val currentSong by songPlayerViewModel.currentSong.collectAsState()
 
+    LaunchedEffect (deepLink) {
+        Log.d("MainScreen", "Deep link: $deepLink")
+        val path = deepLink?.lastPathSegment
+        if (path != null) {
+            songPlayerViewModel.playOnlineSong(path)
+            songPlayerViewModel.setLastScreenRoute(NavigationItem.Home.route)
+            navController.navigate("track_view")
+        }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             //        // Di desain figma ga ada header? kalo butuh nanti uncomment

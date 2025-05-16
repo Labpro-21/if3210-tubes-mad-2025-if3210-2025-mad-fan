@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -38,10 +39,10 @@ class MainActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // enableEdgeToEdge() // Biar aplikasi penuh sampe ke status bar
         super.onCreate(savedInstanceState)
-
+        val deepLink = intent?.data
         setContent {
             PurrytifyTheme {
-                PurrytifyApp()
+                PurrytifyApp(deepLink)
             }
         }
     }
@@ -49,7 +50,7 @@ class MainActivity: AppCompatActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PurrytifyApp() {
+fun PurrytifyApp(deeplink: Uri? = null) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val connectivityObserver = remember { NetworkConnectivityObserver(context) }
@@ -86,7 +87,7 @@ fun PurrytifyApp() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            MainScreen(navController = navController, songPlayerViewModel = songPlayerViewModel)
+            MainScreen(navController = navController, songPlayerViewModel = songPlayerViewModel, deeplink)
         }
 
         // Snackbar

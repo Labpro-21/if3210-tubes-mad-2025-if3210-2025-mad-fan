@@ -48,6 +48,19 @@ class OnlineSongRepository @Inject constructor(
         }
     }
 
+    suspend fun getOnlineSongById(id: String): OnlineSongResponse? {
+        return try {
+            val response = apiService.getOnlineSongById(id)
+            if (response.isSuccessful) {
+                response.body()
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private suspend fun saveOnlineSongToLocal(
         context: Context,
         fileUrl: String,

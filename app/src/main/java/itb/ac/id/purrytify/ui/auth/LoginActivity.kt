@@ -50,6 +50,7 @@ class LoginActivity : AppCompatActivity() {
             delay(1000)
             keepSplashScreen = false
         }
+
         setContent {
             PurrytifyTheme {
                 val viewModel: LoginViewModel = hiltViewModel()
@@ -68,6 +69,7 @@ fun LoginScreen(
     var email by rememberSaveable  { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
+
     LaunchedEffect(Unit) {
         viewModel.checkLogin()
     }
@@ -79,7 +81,9 @@ fun LoginScreen(
             TokenCheckServiceScheduler.scheduleTokenCheck(context.applicationContext)
 
             // Move too MainActivity
-            val intent = Intent(context, MainActivity::class.java)
+            val intent = Intent(context, MainActivity::class.java).apply {
+                data = (context as? Activity)?.intent?.data
+            }
             context.startActivity(intent)
 
             // Close the login activity so user can't go back

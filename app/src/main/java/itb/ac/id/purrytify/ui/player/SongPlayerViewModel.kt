@@ -13,9 +13,9 @@ import androidx.media3.common.MediaItem.fromUri
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.local.dao.SongDao
 import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.data.model.toSong
 import itb.ac.id.purrytify.service.NotificationService
 import itb.ac.id.purrytify.ui.navigation.NavigationItem
 import kotlinx.coroutines.delay
@@ -24,19 +24,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
-import android.os.Build
-import androidx.media3.common.MediaItem
-import itb.ac.id.purrytify.data.model.OnlineSongResponse
-import itb.ac.id.purrytify.data.model.toSong
-import itb.ac.id.purrytify.di.UnauthenticatedClient
-import okhttp3.OkHttpClient
+import itb.ac.id.purrytify.data.repository.OnlineSongRepository
 
 @HiltViewModel
 class SongPlayerViewModel @Inject constructor(
     private val application: Application,
     private val songDao: SongDao,
-    private val tokenManager: TokenManager,
-    @UnauthenticatedClient private val client: OkHttpClient
+    private val onlineSongRepository: OnlineSongRepository
 ) : AndroidViewModel(application){
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
@@ -412,5 +406,20 @@ class SongPlayerViewModel @Inject constructor(
         _position.value = 0L
 
         stopNotificationService()
+    }
+
+    fun playOnlineSong(id: String) {
+        viewModelScope.launch {
+            try {
+                val song = onlineSongRepository.getOnlineSongById(id)?.toSong()
+                if (song == null) {
+                    Log.e("SongPlayerViewModel", "Song not found")
+                    return@launch
+                }
+                playSong(song)
+            } catch (e: Exception) {
+                Log.e("SongPlayerViewModel", "Error fetching online song: ${e.message}")
+            }
+        }
     }
 }

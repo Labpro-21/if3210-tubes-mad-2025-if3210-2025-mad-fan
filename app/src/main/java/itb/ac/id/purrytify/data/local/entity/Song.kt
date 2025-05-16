@@ -2,7 +2,7 @@ package itb.ac.id.purrytify.data.local.entity
 
 import androidx.room.*
 
-@Entity(tableName = "song")
+@Entity(tableName = "song",indices = [Index(value = ["title", "artist", "userID"], unique = true)])
 data class Song (
     @PrimaryKey(autoGenerate = true) val songId: Int = 0,
     var title: String,

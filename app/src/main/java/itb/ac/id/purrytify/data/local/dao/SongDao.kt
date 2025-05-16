@@ -14,6 +14,9 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE userID = :userId AND isLiked = true")
     fun getLiked(userId: Int): Flow<List<Song>>
 
+    @Query("SELECT * FROM song WHERE userID = :userId AND isDownloaded = true")
+    fun getDownloaded(userId: Int): Flow<List<Song>>
+
     @Query("SELECT * FROM song WHERE userID = :userId ORDER BY createdAt DESC LIMIT 10")
     fun getNew(userId: Int): Flow<List<Song>>
 
@@ -38,7 +41,7 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE userID = :userId AND songId < :songId ORDER BY songId DESC LIMIT 1")
     suspend fun getPreviousSong(songId: Int, userId: Int): Song?
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(vararg song: Song): List<Long> // return id
 
     @Delete

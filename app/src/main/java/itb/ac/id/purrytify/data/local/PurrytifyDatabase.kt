@@ -7,7 +7,7 @@ import itb.ac.id.purrytify.data.local.entity.Song
 
 @Database(
     entities = [Song::class],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 abstract class PurrytifyDatabase: RoomDatabase() {

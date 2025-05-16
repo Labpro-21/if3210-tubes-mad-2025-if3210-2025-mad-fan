@@ -28,18 +28,24 @@ import android.os.Build
 import androidx.media3.common.MediaItem
 import itb.ac.id.purrytify.data.model.OnlineSongResponse
 import itb.ac.id.purrytify.data.model.toSong
+import itb.ac.id.purrytify.di.UnauthenticatedClient
+import okhttp3.OkHttpClient
 
 @HiltViewModel
 class SongPlayerViewModel @Inject constructor(
     private val application: Application,
     private val songDao: SongDao,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    @UnauthenticatedClient private val client: OkHttpClient
 ) : AndroidViewModel(application){
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
 
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying
+
+    private val _isBuffering = MutableStateFlow(false)
+    val isBuffering: StateFlow<Boolean> = _isBuffering
 
     private val _position = MutableStateFlow(0L)
     val position: StateFlow<Long> = _position
@@ -132,9 +138,11 @@ class SongPlayerViewModel @Inject constructor(
             when (playbackState) {
                 Player.STATE_READY -> {
                     checkUpdateDuration()
+                    _isBuffering.value = false
                     notificationService?.updateNotification()
                 }
                 Player.STATE_ENDED -> {
+                    _isBuffering.value = false
                     if (_repeatMode.value == RepeatMode.ONE) {
                         playAtIndex(currentIndex)
                         Log.d("SongPlayer", "Repeating song: ${_currentSong.value?.title}")
@@ -153,8 +161,10 @@ class SongPlayerViewModel @Inject constructor(
                     }
                 }
                 Player.STATE_BUFFERING -> {
+                    _isBuffering.value = true
                 }
                 Player.STATE_IDLE -> {
+                    _isBuffering.value = false
                 }
             }
         }
@@ -177,11 +187,7 @@ class SongPlayerViewModel @Inject constructor(
         }
 
         val intent = Intent(application, NotificationService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            application.startForegroundService(intent)
-        } else {
-            application.startService(intent)
-        }
+        application.startForegroundService(intent)
 
         currentSong.value?.let {
             notificationService?.updateCurrentSong(it)
@@ -231,7 +237,7 @@ class SongPlayerViewModel @Inject constructor(
         _songQueue.value = newQueue
         currentIndex = index
         _currentSong.value = updatedSong
-        songPlayer.setMediaItem(MediaItem.fromUri(updatedSong.filePath))
+        songPlayer.setMediaItem(fromUri(updatedSong.filePath))
         songPlayer.prepare()
         songPlayer.play()
 

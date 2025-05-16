@@ -19,10 +19,13 @@ class LibraryViewModel @Inject constructor(
     val allSongs: LiveData<List<Song>> = _allSongs
     private val _likedSongs = MutableLiveData<List<Song>>()
     val likedSongs: LiveData<List<Song>> = _likedSongs
+    private val _downloadedSongs = MutableLiveData<List<Song>>()
+    val downloadedSongs: LiveData<List<Song>> = _downloadedSongs
 
     init {
         loadAllSongs()
         loadLikedSongs()
+        loadDownloadedSongs()
     }
 
     private fun loadAllSongs() {
@@ -42,4 +45,14 @@ class LibraryViewModel @Inject constructor(
             }
         }
     }
+
+    private fun loadDownloadedSongs() {
+        viewModelScope.launch {
+            val userID = tokenManager.getCurrentUserID()
+            songDao.getDownloaded(userID).collect { songs ->
+                _downloadedSongs.postValue(songs)
+            }
+        }
+    }
+
 }

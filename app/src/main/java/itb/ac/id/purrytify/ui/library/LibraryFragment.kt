@@ -52,6 +52,8 @@ class LibraryFragment(private val songPlayerViewModel: SongPlayerViewModel, priv
             when (position) {
                 0 -> tab.text = "All"
                 1 -> tab.text = "Liked"
+                2 -> tab.text = "Downloaded"
+                else -> throw IllegalArgumentException("Invalid position $position")
             }
         }.attach()
     }

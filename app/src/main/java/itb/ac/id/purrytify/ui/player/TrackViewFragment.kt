@@ -5,24 +5,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
-import itb.ac.id.purrytify.ui.addsong.AddSongScreen
 import itb.ac.id.purrytify.ui.editsong.EditSongScreen
 import itb.ac.id.purrytify.ui.editsong.EditSongViewModel
+import itb.ac.id.purrytify.ui.onlinesong.OnlineSongViewModel
 import itb.ac.id.purrytify.ui.theme.DavyGrey
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
@@ -30,12 +29,14 @@ import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 fun TrackViewFragment(
     viewModel: SongPlayerViewModel,
     editSongViewModel: EditSongViewModel = hiltViewModel(),
+    onlineSongViewModel: OnlineSongViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
     val song by viewModel.currentSong.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
     val position by viewModel.position.collectAsState()
     val ended by viewModel.isQueueEmpty.collectAsState()
+    val isBuffering by viewModel.isBuffering.collectAsState()
 
     var showMenu by remember { mutableStateOf(false) }
     var showSheet by remember { mutableStateOf(false) }
@@ -44,6 +45,7 @@ fun TrackViewFragment(
     // Mode repeat: 0 = Off, 1 = Repeat One, 2 = Repeat All
     val repeatMode by viewModel.repeatMode.collectAsState()
 
+    val context = LocalContext.current
     LaunchedEffect(song) {
         Log.d("SongPlayer", "Song: ${viewModel.currentSong.value}")
     }
@@ -99,17 +101,44 @@ fun TrackViewFragment(
                                     onBack()
                                 }
                             )
+                            if (song!!.isOnline) {
+                                DropdownMenuItem(
+                                    text = { Text("Download Song")},
+                                    onClick = {
+                                        showMenu = false
+                                        onlineSongViewModel.downloadSong(context, song!!)
+                                    }
+                                )
+                            }
                         }
                     }
                 }
 
-                Image(
-                    painter = rememberAsyncImagePainter(model = song!!.imagePath),
-                    contentDescription = "Album Art",
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .size(400.dp)
                         .padding(16.dp)
-                )
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = song!!.imagePath),
+                        contentDescription = "Album Art",
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    if (isBuffering) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.3f))
+                        )
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(64.dp),
+                            color = Color.White,
+                            strokeWidth = 4.dp
+                        )
+                    }
+                }
 
                 Row(
                     modifier = Modifier
@@ -217,7 +246,7 @@ fun TrackViewFragment(
                     // Repeat One/All button
                     IconButton(
                         onClick = {
-                            // Cycle modenya
+                            // Cycle mode nya
                             viewModel.toggleRepeatMode()
                             // TODO: Implement repeat functionality
                         }
@@ -239,7 +268,7 @@ fun TrackViewFragment(
                 }
             }
         }
-        Box() {
+        Box {
             if (showSheet) {
                 EditSongScreen(
                     onDismiss = { showSheet = false },

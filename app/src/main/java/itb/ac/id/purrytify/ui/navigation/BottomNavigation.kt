@@ -16,6 +16,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
 import itb.ac.id.purrytify.ui.home.HomeFragment
 import itb.ac.id.purrytify.ui.library.LibraryScreen
+import itb.ac.id.purrytify.ui.onlinesong.OnlineSongListScreen
 import itb.ac.id.purrytify.ui.player.*
 import itb.ac.id.purrytify.ui.profile.ProfileScreen
 
@@ -60,10 +61,15 @@ fun MainScreen(navController: NavHostController, songPlayerViewModel: SongPlayer
 fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: NavHostController) {
     NavHost(navController = navController, startDestination = NavigationItem.Home.route) {
         composable(NavigationItem.Home.route) {
-            HomeFragment(songPlayerViewModel = songPlayerViewModel, onPlay = {
-                songPlayerViewModel.setLastScreenRoute(NavigationItem.Home.route)
-                navController.navigate("track_view")
-            })
+            HomeFragment(songPlayerViewModel = songPlayerViewModel,
+                onPlay = {
+                    songPlayerViewModel.setLastScreenRoute(NavigationItem.Home.route)
+                    navController.navigate("track_view")
+                },
+                onOnlineSong = {
+                    songPlayerViewModel.setLastScreenRoute(NavigationItem.Home.route)
+                    navController.navigate("online_song_country")
+                })
         }
         composable(NavigationItem.Library.route) {
             LibraryScreen(songPlayerViewModel, onPlay = {
@@ -95,6 +101,26 @@ fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: Nav
                 }
             )
         }
+        composable("online_song_global") {
+            OnlineSongListScreen(
+                songPlayerViewModel = songPlayerViewModel,
+                isGlobal = true,
+                onPlay = {
+                    songPlayerViewModel.setLastScreenRoute("online_song_global")
+                    navController.navigate("track_view")
+                }
+            )
+        }
+        composable("online_song_country") {
+            OnlineSongListScreen(
+                songPlayerViewModel = songPlayerViewModel,
+                isGlobal = false,
+                onPlay = {
+                    songPlayerViewModel.setLastScreenRoute("online_song_country")
+                    navController.navigate("track_view")
+                }
+            )
+        }
     }
 }
 
@@ -111,7 +137,9 @@ fun BottomNavigation(navController: NavHostController, songPlayerViewModel: Song
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
-
+        val isNonMainScreen = currentRoute != NavigationItem.Home.route &&
+                currentRoute != NavigationItem.Library.route &&
+                currentRoute != NavigationItem.Profile.route
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
@@ -130,27 +158,20 @@ fun BottomNavigation(navController: NavHostController, songPlayerViewModel: Song
                 selected = currentRoute == item.route,
                 onClick = {
                     Log.d("Navigation", "Clicked on: ${item.route}, current route: $currentRoute")
-                    if (currentRoute == "track_view") {
-                        songPlayerViewModel.setLastScreenRoute(item.route)
-                        // Pop back utk remove track_view dari back stack
-                        navController.popBackStack()
-                        if (navController.currentBackStackEntry?.destination?.route != item.route) {
-                            navController.navigate(item.route) {
-                                // Pop up to the root to clear any nested navigation
-                                popUpTo(navController.graph.startDestinationId)
-                                launchSingleTop = true
-                            }
+                    if (currentRoute == item.route) return@NavigationBarItem
+
+                    if (isNonMainScreen) {
+                        // Pop back to root then navigate
+                        navController.popBackStack(navController.graph.startDestinationId, inclusive = false)
+                    }
+
+                    navController.navigate(item.route) {
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = false
+                            saveState = true
                         }
-                    } else {
-                        if (currentRoute != item.route) {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
+                        launchSingleTop = true
+                        restoreState = true
                     }
                 },
                 colors = NavigationBarItemDefaults.colors(

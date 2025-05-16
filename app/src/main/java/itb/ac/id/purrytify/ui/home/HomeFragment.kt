@@ -46,7 +46,8 @@ import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 fun HomeFragment(
     viewModel: HomeViewModel = hiltViewModel(),
     songPlayerViewModel: SongPlayerViewModel,
-    onPlay: () -> Unit
+    onPlay: () -> Unit,
+    onOnlineSong: () -> Unit
 ) {
     val newSongs by viewModel.newSongs.collectAsState()
     val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
@@ -55,7 +56,7 @@ fun HomeFragment(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        HomeContent(newSongs, recentlyPlayed, songPlayerViewModel, onPlay)
+        HomeContent(newSongs, recentlyPlayed, songPlayerViewModel, onPlay, onOnlineSong)
     }
 }
 
@@ -64,7 +65,8 @@ fun HomeContent(
     newSongsData: List<Song>,
     recentlyPlayedData: List<Song>,
     songPlayerViewModel: SongPlayerViewModel,
-    onPlay: () -> Unit
+    onPlay: () -> Unit,
+    onOnlineSong: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -72,6 +74,34 @@ fun HomeContent(
             .verticalScroll(rememberScrollState())
             .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
+        Text(
+            text = "Charts",
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .width(120.dp)
+                    .clickable { onOnlineSong() },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Cover
+                Image(
+                    painter = rememberAsyncImagePainter(model = R.drawable.cover_best_interest),
+                    contentDescription = "Online Song Cover",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+        }
         Text(
             text = "New songs",
             color = MaterialTheme.colorScheme.onBackground,

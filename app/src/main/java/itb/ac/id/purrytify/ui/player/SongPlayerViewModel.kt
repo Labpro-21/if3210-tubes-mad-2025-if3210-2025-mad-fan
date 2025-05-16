@@ -283,6 +283,7 @@ class SongPlayerViewModel @Inject constructor(
             if (_repeatMode.value == RepeatMode.ALL) {
                 playAtIndex(0)
             }
+            stopSong()
             return
         }
         Log.d("SongPlayer", "Playing current song: ${queue[currentIndex].title}")
@@ -311,13 +312,16 @@ class SongPlayerViewModel @Inject constructor(
 
     private fun checkUpdateDuration(){
         val song = _currentSong.value ?: return
-        if (song.duration == 0L && songPlayer.duration > 0) {
+        Log.d("SongPlayer", "Updating song duration: ${song.title}, original: ${song.duration}, duration: ${songPlayer.duration}")
+        if (song.duration != songPlayer.duration) {
             viewModelScope.launch {
                 val updatedSong = song.copy(duration = songPlayer.duration)
                 if (!updatedSong.isOnline) {
                     songDao.update(updatedSong)
                 }
                 _currentSong.value = updatedSong
+                Log.d("SongPlayer", "Updating song duration: ${_currentSong.value!!.title}, original: ${_currentSong.value!!.duration}, duration: ${songPlayer.duration}")
+
             }
         }
     }
@@ -397,10 +401,9 @@ class SongPlayerViewModel @Inject constructor(
                 }
             }
         }
-        _currentSong.value = null
+        stopSong()
         _isPlaying.value = false
         _position.value = 0L
-        songPlayer.stop()
 
         stopNotificationService()
     }

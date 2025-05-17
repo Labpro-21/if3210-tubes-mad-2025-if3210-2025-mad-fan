@@ -130,6 +130,10 @@ dependencies {
 
     // JWT
     implementation(libs.java.jwt)
+
+    // QR Code Generator
+    implementation(libs.core)
+    implementation(libs.zxing.android.embedded)
 }
 
 kapt {

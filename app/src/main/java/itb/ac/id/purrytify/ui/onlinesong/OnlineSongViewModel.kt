@@ -2,9 +2,13 @@ package itb.ac.id.purrytify.ui.onlinesong
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Color
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.*
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.MultiFormatWriter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import itb.ac.id.purrytify.data.local.dao.SongDao
 import itb.ac.id.purrytify.data.local.entity.Song
@@ -67,13 +71,5 @@ class OnlineSongViewModel @Inject constructor(
             Log.d("OnlineSongViewModel", "Song inserted successfully: $id")
         }
     }
-    fun shareDeepLink(context: Context, deepLink: String) {
-        val shareIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, deepLink)
-            type = "text/plain"
-        }
-        val chooser = Intent.createChooser(shareIntent, "Share with")
-        context.startActivity(chooser)
-    }
+
 }

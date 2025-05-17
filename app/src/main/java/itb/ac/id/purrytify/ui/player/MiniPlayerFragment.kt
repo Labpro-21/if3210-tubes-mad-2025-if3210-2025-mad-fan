@@ -21,6 +21,7 @@ import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.onlinesong.OnlineSongViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
+import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.shareDeepLink
 
 @Composable
 fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
@@ -58,7 +59,7 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                         Text(currentSong!!.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                     }
                     IconButton(onClick = {
-                        onlineSongViewModel.shareDeepLink(context, deepLink)
+                        shareDeepLink(context, deepLink)
                     }) {
                         Icon(
                             imageVector = Icons.Default.Share,

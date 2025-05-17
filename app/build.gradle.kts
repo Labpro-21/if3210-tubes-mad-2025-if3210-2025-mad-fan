@@ -134,6 +134,10 @@ dependencies {
     // QR Code Generator
     implementation(libs.core)
     implementation(libs.zxing.android.embedded)
+
+    // Google Location Services
+    implementation(libs.play.services.location)
+    implementation(libs.play.services.maps)
 }
 
 kapt {

@@ -7,6 +7,11 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Multipart
+import retrofit2.http.Part
+import retrofit2.http.PATCH
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 interface ApiService {
     @POST("api/login")
@@ -17,6 +22,13 @@ interface ApiService {
 
     @GET("uploads/profile-picture/{profilePhotoPath}")
     suspend fun getProfilePicture(@Path("profilePhotoPath") profilePhotoPath: String): Response<ResponseBody>
+
+    @Multipart
+    @PATCH("api/profile")
+    suspend fun updateProfile(
+        @Part("location") location: RequestBody? = null,
+        @Part profilePhoto: MultipartBody.Part? = null
+    ): Response<ProfileResponse>
 
     @GET("api/verify-token")
     suspend fun verifyToken(): Response<VerifyResponse>

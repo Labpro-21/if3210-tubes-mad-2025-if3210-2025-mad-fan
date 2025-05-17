@@ -71,7 +71,7 @@ fun HomeContent(
             .padding(start = 16.dp, end = 16.dp, top = 16.dp)
     ) {
         Text(
-            text = "Charts",
+            text = "Online Songs",
             color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp)

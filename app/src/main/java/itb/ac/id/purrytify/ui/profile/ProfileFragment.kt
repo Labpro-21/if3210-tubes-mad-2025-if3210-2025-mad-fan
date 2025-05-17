@@ -128,6 +128,7 @@ fun ProfileContent(
     logoutState: LogoutState,
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    var showEditProfile by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     Box(
@@ -144,7 +145,6 @@ fun ProfileContent(
                     )
                 )
         )
-
         if (profileState.isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
@@ -174,7 +174,6 @@ fun ProfileContent(
                                     .placeholder(R.drawable.profile_dummy)
                                     .build()
                             )
-
                             Image(
                                 painter = painter,
                                 contentDescription = "Profile Photo",
@@ -191,23 +190,6 @@ fun ProfileContent(
                                     .size(130.dp)
                                     .clip(CircleShape),
                                 contentScale = ContentScale.Crop
-                            )
-                        }
-
-                        Button(
-                            onClick = { /* TODO handle klik edit */ },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .align(Alignment.BottomEnd),
-                            shape = CircleShape,
-                            contentPadding = PaddingValues(0.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.White)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_edit),
-                                contentDescription = "Edit Profile",
-                                tint = Color.Black,
-                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
@@ -227,7 +209,7 @@ fun ProfileContent(
                     Spacer(modifier = Modifier.height(16.dp))
                     // Edit button
                     Button(
-                        onClick = { /* TODO handle klik edit */ },
+                        onClick = { showEditProfile = true },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.DarkGray,
                             contentColor = Color.White
@@ -274,6 +256,15 @@ fun ProfileContent(
                     }
                 }
             }
+        }
+
+        // Popup
+        if (showEditProfile) {
+            EditProfileScreen(
+                viewModel = viewModel,
+                profileState = profileState,
+                onDismiss = { showEditProfile = false }
+            )
         }
 
         // Loading dan error dialog

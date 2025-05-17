@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
@@ -30,7 +34,7 @@ fun OnlineSongListScreen(
     val songs = onlineSongViewModel.onlineSongs.collectAsState(emptyList())
     var selectedCountryCode by remember { mutableStateOf("ID") }
     val isLoading = onlineSongViewModel.isLoading
-
+    val context = LocalContext.current
     // Fetch songs when selectedCountryCode changes
     LaunchedEffect(isGlobal, selectedCountryCode) {
         if (isGlobal) {
@@ -58,6 +62,17 @@ fun OnlineSongListScreen(
                         selectedCountryCode = newCode
                     }
                 )
+                IconButton(onClick = {
+                    songs.value.forEach { song ->
+                        onlineSongViewModel.downloadSong(context, song.toSong())
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Download All Songs",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         } else {
             Row(
@@ -71,6 +86,17 @@ fun OnlineSongListScreen(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = {
+                    songs.value.forEach { song ->
+                        onlineSongViewModel.downloadSong(context, song.toSong())
+                    }
+                }) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Download All Songs",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
         if (isLoading) {
@@ -82,7 +108,8 @@ fun OnlineSongListScreen(
         } else {
             SongList(songs.value,
                 songPlayerViewModel = songPlayerViewModel,
-                onPlay = onPlay
+                onPlay = onPlay,
+                onlineSongViewModel = onlineSongViewModel
             )
         }
     }
@@ -133,20 +160,22 @@ fun CountrySelector(
 
 
 @Composable
-fun SongList(songs: List<OnlineSongResponse>, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit) {
+fun SongList(songs: List<OnlineSongResponse>, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, onlineSongViewModel: OnlineSongViewModel) {
     LazyColumn {
         items(songs) { song ->
             SongItem(
                 song,
                 songPlayerViewModel = songPlayerViewModel,
-                onPlay = onPlay
+                onPlay = onPlay,
+                onlineSongViewModel
             )
         }
     }
 }
 
 @Composable
-fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit) {
+fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, onlineSongViewModel: OnlineSongViewModel) {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -170,6 +199,21 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
         Column {
             Text(song.title, style = MaterialTheme.typography.bodyLarge)
             Text(song.artist, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        IconButton(onClick = { onlineSongViewModel.downloadSong(context, song.toSong()) }) {
+            Icon(
+                imageVector = Icons.Default.Download,
+                contentDescription = "Download",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        IconButton(onClick = { onlineSongViewModel.shareDeepLink(context, "purrytify://song/" + song.id) }) {
+            Icon(
+                imageVector = Icons.Default.Share,
+                contentDescription = "Share",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

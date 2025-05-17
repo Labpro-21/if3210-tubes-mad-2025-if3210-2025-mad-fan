@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.ui.onlinesong.OnlineSongViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 
 @Composable
@@ -25,7 +27,9 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
     val currentSong by viewModel.currentSong.collectAsState()
     val position by viewModel.position.collectAsState()
     val isPlaying by viewModel.isPlaying.collectAsState()
-
+    val onlineSongViewModel = hiltViewModel<OnlineSongViewModel>()
+    val context = LocalContext.current
+    val deepLink = "purrytify://song/${currentSong?.songId}"
     if (currentSong != null) {
         Surface(
             modifier = Modifier
@@ -52,6 +56,15 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                     ) {
                         Text(currentSong!!.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                         Text(currentSong!!.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+                    }
+                    IconButton(onClick = {
+                        onlineSongViewModel.shareDeepLink(context, deepLink)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            tint = Color.White,
+                            contentDescription = "Share"
+                        )
                     }
                     IconButton(onClick = { viewModel.previousSong() }) {
                         Icon(

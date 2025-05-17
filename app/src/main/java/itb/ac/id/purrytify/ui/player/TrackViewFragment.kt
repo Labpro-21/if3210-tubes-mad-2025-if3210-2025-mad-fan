@@ -49,6 +49,7 @@ fun TrackViewFragment(
     LaunchedEffect(song) {
         Log.d("SongPlayer", "Song: ${viewModel.currentSong.value}")
     }
+    val deepLink = "purrytify://song/${song?.songId}"
 
     LaunchedEffect(ended) {
         Log.d("SongPlayer", "ended: $ended")
@@ -107,6 +108,13 @@ fun TrackViewFragment(
                                     onClick = {
                                         showMenu = false
                                         onlineSongViewModel.downloadSong(context, song!!)
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Share Song")},
+                                    onClick = {
+                                        showMenu = false
+                                        onlineSongViewModel.shareDeepLink(context, deepLink)
                                     }
                                 )
                             }

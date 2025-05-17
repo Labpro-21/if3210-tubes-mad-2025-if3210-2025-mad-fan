@@ -1,6 +1,7 @@
 package itb.ac.id.purrytify.ui.onlinesong
 
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.*
@@ -65,5 +66,14 @@ class OnlineSongViewModel @Inject constructor(
             val id = songDao.insert(newSong)
             Log.d("OnlineSongViewModel", "Song inserted successfully: $id")
         }
+    }
+    fun shareDeepLink(context: Context, deepLink: String) {
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            putExtra(Intent.EXTRA_TEXT, deepLink)
+            type = "text/plain"
+        }
+        val chooser = Intent.createChooser(shareIntent, "Share with")
+        context.startActivity(chooser)
     }
 }

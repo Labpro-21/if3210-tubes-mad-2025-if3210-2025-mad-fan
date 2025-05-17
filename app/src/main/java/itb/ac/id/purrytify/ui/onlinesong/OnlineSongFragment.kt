@@ -7,8 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +22,10 @@ import coil.compose.AsyncImage
 import itb.ac.id.purrytify.data.model.OnlineSongResponse
 import itb.ac.id.purrytify.data.model.toSong
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
+import itb.ac.id.purrytify.utils.OnlineSongUtil
+import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.CreateQRModalBottomSheet
+import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.generateQRBitmap
+import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.shareDeepLink
 
 @Composable
 fun OnlineSongListScreen(
@@ -170,12 +173,14 @@ fun SongList(songs: List<OnlineSongResponse>, songPlayerViewModel: SongPlayerVie
                 onlineSongViewModel
             )
         }
+
     }
 }
 
 @Composable
 fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, onlineSongViewModel: OnlineSongViewModel) {
     val context = LocalContext.current
+    val showSheet = remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -198,7 +203,7 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
 
         Column {
             Text(song.title, style = MaterialTheme.typography.bodyLarge)
-            Text(song.artist, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Text(song.artist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
         }
         Spacer(modifier = Modifier.weight(1f))
         IconButton(onClick = { onlineSongViewModel.downloadSong(context, song.toSong()) }) {
@@ -208,11 +213,29 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
                 tint = MaterialTheme.colorScheme.primary
             )
         }
-        IconButton(onClick = { onlineSongViewModel.shareDeepLink(context, "purrytify://song/" + song.id) }) {
+        IconButton(onClick = { shareDeepLink(context, "purrytify://song/" + song.id) }) {
             Icon(
                 imageVector = Icons.Default.Share,
                 contentDescription = "Share",
                 tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        IconButton(onClick = {
+            showSheet.value = true
+        }) {
+            Icon(
+                imageVector = Icons.Default.QrCode2,
+                contentDescription = "QR Code",
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        if (showSheet.value) {
+            CreateQRModalBottomSheet(
+                context = context,
+                title = song.title,
+                artist = song.artist,
+                deepLink = "purrytify://song/${song.id}",
+                onDismiss = { showSheet.value = false }
             )
         }
     }

@@ -24,6 +24,8 @@ import itb.ac.id.purrytify.ui.editsong.EditSongViewModel
 import itb.ac.id.purrytify.ui.onlinesong.OnlineSongViewModel
 import itb.ac.id.purrytify.ui.theme.DavyGrey
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
+import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.CreateQRModalBottomSheet
+import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.shareDeepLink
 
 @Composable
 fun TrackViewFragment(
@@ -46,6 +48,7 @@ fun TrackViewFragment(
     val repeatMode by viewModel.repeatMode.collectAsState()
 
     val context = LocalContext.current
+    var showSheetQR by remember { mutableStateOf(false) }
     LaunchedEffect(song) {
         Log.d("SongPlayer", "Song: ${viewModel.currentSong.value}")
     }
@@ -114,10 +117,27 @@ fun TrackViewFragment(
                                     text = { Text("Share Song")},
                                     onClick = {
                                         showMenu = false
-                                        onlineSongViewModel.shareDeepLink(context, deepLink)
+                                        shareDeepLink(context, deepLink)
                                     }
                                 )
+                                DropdownMenuItem(
+                                    text = { Text("Share Song QR")},
+                                    onClick = {
+                                        showMenu = false
+                                        showSheetQR = true
+                                    }
+                                )
+
                             }
+                        }
+                        if (showSheetQR) {
+                            CreateQRModalBottomSheet(
+                                context = context,
+                                title = song!!.title,
+                                artist = song!!.artist,
+                                deepLink = deepLink,
+                                onDismiss = { showSheetQR = false }
+                            )
                         }
                     }
                 }

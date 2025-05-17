@@ -21,6 +21,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.net.Uri
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import java.io.File
+import okhttp3.RequestBody.Companion.asRequestBody
 
 data class ProfileUiState(
     val isLoading: Boolean = false,
@@ -47,6 +53,9 @@ class ProfileViewModel @Inject constructor(
     private val _profileState = MutableStateFlow(ProfileUiState())
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
+    private val _editProfileState = MutableStateFlow<EditProfileState>(EditProfileState.Idle)
+    val editProfileState: StateFlow<EditProfileState> = _editProfileState.asStateFlow()
+
     // Add logout state
     private val _logoutState = MutableStateFlow<LogoutState>(LogoutState.Idle)
     val logoutState: StateFlow<LogoutState> = _logoutState.asStateFlow()
@@ -66,6 +75,61 @@ class ProfileViewModel @Inject constructor(
     val listenedCount: StateFlow<Int> = _listenedCount
 
     private lateinit var connectivityObserver: ConnectivityObserver
+
+    fun updateProfile(location: String? = null, profilePhoto: Uri? = null, context: Context) {
+        if (_networkStatus.value != ConnectionStatus.Available) {
+            _editProfileState.value = EditProfileState.Error("No internet connection")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _editProfileState.value = EditProfileState.Loading
+
+                val photoFile: MultipartBody.Part? = profilePhoto?.let {
+                    val inputStream = context.contentResolver.openInputStream(it)
+                    val file = File(context.cacheDir, "profile_photo.jpg")
+                    inputStream?.use { input ->
+                        file.outputStream().use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+
+                    val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                    MultipartBody.Part.createFormData("profilePhoto", file.name, requestFile)
+                }
+
+                // Buat request
+                val locationPart = location?.let {
+//                    log location
+                    Log.d("ProfileViewModel", "Location: $it")
+                    RequestBody.create("text/plain".toMediaTypeOrNull(), it)
+                }
+
+                val response = userRepository.updateProfile(locationPart, photoFile)
+
+//                log response
+                Log.d("ProfileViewModel", "Update Profile Response: $response")
+
+                // Update profile w data baru
+                _profileState.value = _profileState.value.copy(
+                    profilePhoto = response.profilePhoto,
+                    location = response.location
+                )
+
+                _editProfileState.value = EditProfileState.Success
+
+                // Refresh profile
+                fetchProfile()
+            } catch (e: Exception) {
+                _editProfileState.value = EditProfileState.Error(e.message ?: "Failed to update profile")
+            }
+        }
+    }
+
+    fun resetEditProfileState() {
+        _editProfileState.value = EditProfileState.Idle
+    }
 
     fun observeNetworkConnectivity(context: Context) {
         connectivityObserver = NetworkConnectivityObserver(context)
@@ -170,4 +234,11 @@ sealed class LogoutState {
     data object Loading : LogoutState()
     data object Success : LogoutState()
     data class Error(val message: String) : LogoutState()
+}
+
+sealed class EditProfileState {
+    data object Idle : EditProfileState()
+    data object Loading : EditProfileState()
+    data object Success : EditProfileState()
+    data class Error(val message: String) : EditProfileState()
 }

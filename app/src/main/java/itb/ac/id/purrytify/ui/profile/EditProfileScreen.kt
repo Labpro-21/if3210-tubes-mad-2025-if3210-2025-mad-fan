@@ -49,6 +49,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -80,16 +82,13 @@ fun EditProfileScreen(
     onDismiss: () -> Unit
 ) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-
     var selectedCountryCode by remember { mutableStateOf<String?>(profileState.location) }
     var selectedCountryName by remember {
         mutableStateOf(
             profileState.location?.let { CountryList.getCountryNameByCode(it) } ?: "Select Location"
         )
     }
-
     var showLocationDialog by remember { mutableStateOf(false) }
-
     val context = LocalContext.current
     val editProfileState by viewModel.editProfileState.collectAsState()
 
@@ -99,12 +98,12 @@ fun EditProfileScreen(
         selectedImageUri = uri
     }
 
-    // TODO: implement buka camera
+    var photoUri by remember { mutableStateOf<Uri?>(null) }
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success && selectedImageUri != null) {
-            // Gambar berhasil diambil & URI set
+        if (success && photoUri != null) {
+            selectedImageUri = photoUri
         } else {
             // Gagal
             Toast.makeText(context, "Failed to capture image", Toast.LENGTH_SHORT).show()
@@ -119,7 +118,6 @@ fun EditProfileScreen(
             fastestInterval = 5000
             numUpdates = 1
         }
-
         val locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 for (location in locationResult.locations) {
@@ -137,13 +135,11 @@ fun EditProfileScreen(
                         Toast.makeText(context, "Error getting location: ${e.message}", Toast.LENGTH_SHORT).show()
                         onCountryCodeFound(null)
                     }
-
                     fusedLocationClient.removeLocationUpdates(this)
                     return
                 }
             }
         }
-
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -154,7 +150,6 @@ fun EditProfileScreen(
         ) {
             return
         }
-
         try {
             fusedLocationClient.requestLocationUpdates(
                 locationRequest,
@@ -169,7 +164,6 @@ fun EditProfileScreen(
 
     fun getLocationAndSetCountry(context: Context, onCountryCodeFound: (String?) -> Unit) {
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-
         if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -182,7 +176,6 @@ fun EditProfileScreen(
             onCountryCodeFound(null)
             return
         }
-
         try {
             fusedLocationClient.lastLocation
                 .addOnSuccessListener { location ->
@@ -215,6 +208,22 @@ fun EditProfileScreen(
         }
     }
 
+    fun createImageFile(): Uri {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val imageFileName = "JPEG_" + timeStamp + "_"
+        val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        val image = File.createTempFile(
+            imageFileName,
+            ".jpg",
+            storageDir
+        )
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.provider",
+            image
+        )
+    }
+
     // Izin
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -227,6 +236,19 @@ fun EditProfileScreen(
             }
         } else {
             Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            photoUri = createImageFile()
+            photoUri?.let { uri ->
+                cameraLauncher.launch(uri)
+            }
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -269,23 +291,6 @@ fun EditProfileScreen(
         }
     }
 
-    // TODO: implement file provider buat camera
-    fun createImageFile(): Uri {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val imageFileName = "JPEG_" + timeStamp + "_"
-        val storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        val image = File.createTempFile(
-            imageFileName,
-            ".jpg",
-            storageDir
-        )
-        return FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider",
-            image
-        )
-    }
-
     // Popup edit profile
     Dialog(
         onDismissRequest = onDismiss,
@@ -317,7 +322,6 @@ fun EditProfileScreen(
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.White
                     )
-
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -327,7 +331,7 @@ fun EditProfileScreen(
                     }
                 }
 
-                // Foto
+                // Photo section
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -383,52 +387,111 @@ fun EditProfileScreen(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(40.dp))
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Profile Photo",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                    )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Gallery
+                        // Open Gallery
                         Button(
                             onClick = { galleryLauncher.launch("image/*") },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                contentColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.primary
                             ),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = "Auto Location"
+                                    imageVector = Icons.Default.PhotoLibrary,
+                                    contentDescription = "Open Gallery"
                                 )
-                                Text("Auto")
+                                Text("Open Gallery")
                             }
                         }
 
-                        // Manual
+                        // Open Camera
                         Button(
-                            onClick = { showLocationDialog = true },
+                            onClick = {
+                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                            },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary,
-                                contentColor = Color.White
+                                containerColor = MaterialTheme.colorScheme.primary
                             ),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(24.dp),
+                            modifier = Modifier.weight(1f)
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PhotoCamera,
+                                    contentDescription = "Open Camera"
+                                )
+                                Text("Open Camera")
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Location
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Location",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextField(
+                                value = selectedCountryName,
+                                onValueChange = {},
+                                readOnly = true,
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                                    disabledContainerColor = MaterialTheme.colorScheme.surface,
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 8.dp)
+                            )
+
+                            // Edit location
+                            IconButton(
+                                onClick = { showLocationDialog = true },
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Edit,
-                                    contentDescription = "Manual Location"
+                                    contentDescription = "Edit Location",
+                                    tint = Color.White
                                 )
-                                Text("Manual")
                             }
                         }
                     }

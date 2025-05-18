@@ -22,6 +22,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import android.os.Looper
+import android.util.Log
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -280,6 +281,8 @@ fun EditProfileScreen(
                 onDismiss()
             }
             is EditProfileState.Error -> {
+//               log
+                Log.d("EditProfileState", "Error: ${(editProfileState as EditProfileState.Error).message}")
                 Toast.makeText(
                     context,
                     (editProfileState as EditProfileState.Error).message,

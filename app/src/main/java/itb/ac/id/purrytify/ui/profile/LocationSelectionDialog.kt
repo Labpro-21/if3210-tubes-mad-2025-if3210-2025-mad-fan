@@ -1,7 +1,5 @@
 package itb.ac.id.purrytify.ui.profile
 
-import Country // TODO: Ganti jangan hardcode
-
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,10 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -39,20 +34,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.background
+import itb.ac.id.purrytify.utils.CountryUtils
 
 @Composable
 fun LocationSelectionDialog(
     onDismiss: () -> Unit,
-    onLocationSelected: (Country) -> Unit,
+    onLocationSelected: (itb.ac.id.purrytify.utils.Country) -> Unit,
     onAutoDetect: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val countries = remember { CountryList.countries }
+
+    val countries = remember { CountryUtils.getAllCountries() }
 
     val filteredCountries = remember(searchQuery) {
         if (searchQuery.isBlank()) {
@@ -95,7 +91,6 @@ fun LocationSelectionDialog(
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
-
                         IconButton(onClick = onDismiss) {
                             Icon(
                                 imageVector = Icons.Default.Close,
@@ -135,10 +130,10 @@ fun LocationSelectionDialog(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = MaterialTheme.colorScheme.onPrimary,
                             unfocusedTextColor = MaterialTheme.colorScheme.onPrimary,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                            focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.6f)
                         )
                     )
                 }
@@ -164,7 +159,7 @@ fun LocationSelectionDialog(
                     )
                 }
 
-                Divider()
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
 
                 // List country
                 LazyColumn(
@@ -186,7 +181,7 @@ fun LocationSelectionDialog(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        Divider()
+//                        Divider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
                     }
                 }
             }

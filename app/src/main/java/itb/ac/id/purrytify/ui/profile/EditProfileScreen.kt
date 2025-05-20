@@ -37,10 +37,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
@@ -75,6 +73,7 @@ import androidx.compose.foundation.background
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
+import itb.ac.id.purrytify.utils.CountryUtils
 
 @Composable
 fun EditProfileScreen(
@@ -86,7 +85,7 @@ fun EditProfileScreen(
     var selectedCountryCode by remember { mutableStateOf<String?>(profileState.location) }
     var selectedCountryName by remember {
         mutableStateOf(
-            profileState.location?.let { CountryList.getCountryNameByCode(it) } ?: "Select Location"
+            profileState.location?.let { CountryUtils.getCountryNameByCode(it) } ?: "Select Location"
         )
     }
     var showLocationDialog by remember { mutableStateOf(false) }
@@ -233,7 +232,7 @@ fun EditProfileScreen(
         if (allGranted) {
             getLocationAndSetCountry(context) { countryCode ->
                 selectedCountryCode = countryCode
-                selectedCountryName = CountryList.getCountryNameByCode(countryCode ?: "")
+                selectedCountryName = CountryUtils.getCountryNameByCode(countryCode ?: "")
             }
         } else {
             Toast.makeText(context, "Location permission denied", Toast.LENGTH_SHORT).show()

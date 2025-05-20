@@ -11,8 +11,10 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -130,6 +132,7 @@ fun ProfileContent(
 ) {
     var showEditProfile by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -154,11 +157,12 @@ fun ProfileContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(top = 32.dp),
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.padding(top = 32.dp)
                 ) {
                     // Profile picture
                     Box {
@@ -254,7 +258,12 @@ fun ProfileContent(
                         StatItem(count = profileState.likedCount.toString(), label = "LIKED")
                         StatItem(count = profileState.listenedCount.toString(), label = "LISTENED")
                     }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+                    SoundCapsuleSection()
                 }
+
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
 
@@ -305,7 +314,6 @@ fun ProfileContent(
         }
     }
 }
-
 @Composable
 fun StatItem(count: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -321,22 +329,4 @@ fun StatItem(count: String, label: String) {
             letterSpacing = 3.sp
         )
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreview() {
-    val dummyProfileState = ProfileUiState(
-        username = "13522001",
-        location = "Indonesia",
-        songsCount = 135,
-        likedCount = 32,
-        listenedCount = 50
-    )
-
-    ProfileContent(
-        profileState = dummyProfileState,
-        logoutState = LogoutState.Idle
-    )
 }

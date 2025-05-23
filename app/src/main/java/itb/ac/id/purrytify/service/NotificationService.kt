@@ -237,6 +237,9 @@ class NotificationService : Service() {
             createPendingIntent(if (isPlaying) ACTION_PAUSE else ACTION_PLAY)
         ).build()
 
+//        log
+        Log.d("NotificationService", "PlayPauseAction: ${if (isPlaying) "Pause" else "Play"}")
+
         val favoriteAction = NotificationCompat.Action.Builder(
             if (song.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border,
             if (song.isLiked) "Remove from Favorites" else "Add to Favorites",
@@ -374,7 +377,7 @@ class NotificationService : Service() {
                     }
                     updateNotification()
                 }
-                playerCallback?.onPlayPause()
+//                playerCallback?.onPlayPause()
                 sendActionToActivity(action)
             }
             ACTION_NEXT -> {

@@ -26,6 +26,8 @@ import java.io.File
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.*
+import java.util.concurrent.ConcurrentHashMap
 
 class NotificationService : Service() {
     companion object {
@@ -40,6 +42,9 @@ class NotificationService : Service() {
     private var currentSong: Song? = null
     private val binder = NotificationBinder()
     private var progressUpdateExecutor: ScheduledExecutorService? = null
+
+    private val imageCache = ConcurrentHashMap<String, Bitmap>()
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     interface PlayerCallback {
         fun onPlayPause()
@@ -185,11 +190,15 @@ class NotificationService : Service() {
 
     private fun updateMediaSessionMetadata() {
         val song = currentSong ?: return
+//        log song filepath
+        Log.d("NotificationService", "Song filePath: ${song.filePath}")
         val metadataBuilder = MediaMetadataCompat.Builder()
             .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
             .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
             .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.duration)
 
+//        log imagePath
+        Log.d("NotificationService", "ImagePath: ${song.imagePath}")
         val albumArt = loadAlbumArt(song.imagePath)
         if (albumArt != null) {
             metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
@@ -198,17 +207,17 @@ class NotificationService : Service() {
         mediaSession.setMetadata(metadataBuilder.build())
     }
 
+    private fun isOnlineSong(filePath: String): Boolean {
+        return filePath.startsWith("http://") || filePath.startsWith("https://")
+    }
+
     fun updateNotification() {
         val song = currentSong ?: return
         val isPlaying = player?.isPlaying ?: false
         val currentPosition = player?.currentPosition ?: 0L
         val duration = song.duration
 
-        val customFavoriteAction = PlaybackStateCompat.CustomAction.Builder(
-            ACTION_TOGGLE_FAVORITE,
-            if (song.isLiked) "Remove from Favorites" else "Add to Favorites",
-            if (song.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border
-        ).build()
+        val isLocalSong = !isOnlineSong(song.filePath)
 
         val playbackStateBuilder = PlaybackStateCompat.Builder()
             .setActions(
@@ -224,7 +233,16 @@ class NotificationService : Service() {
                 currentPosition,
                 1.0f
             )
-            .addCustomAction(customFavoriteAction)
+
+        if (isLocalSong) {
+            val customFavoriteAction = PlaybackStateCompat.CustomAction.Builder(
+                ACTION_TOGGLE_FAVORITE,
+                if (song.isLiked) "Remove from Favorites" else "Add to Favorites",
+                if (song.isLiked) R.drawable.ic_favorite else R.drawable.ic_favorite_border
+            ).build()
+
+            playbackStateBuilder.addCustomAction(customFavoriteAction)
+        }
 
         mediaSession.setPlaybackState(playbackStateBuilder.build())
 
@@ -262,24 +280,65 @@ class NotificationService : Service() {
             return defaultBitmap
         }
 
+        // cache first
+        imageCache[imagePath]?.let { return it }
+
         try {
+            // online
+            if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+                loadImageFromUrlAsync(imagePath)
+                return defaultBitmap
+            }
             // URI
-            if (imagePath.startsWith("content://")) {
+            else if (imagePath.startsWith("content://")) {
                 val uri = android.net.Uri.parse(imagePath)
                 val inputStream = contentResolver.openInputStream(uri)
-                return inputStream?.use { BitmapFactory.decodeStream(it) } ?: defaultBitmap
+                val bitmap = inputStream?.use { BitmapFactory.decodeStream(it) } ?: defaultBitmap
+                imageCache[imagePath] = bitmap
+                return bitmap
             }
             // file path biasa
             else {
                 val file = File(imagePath)
                 if (file.exists()) {
-                    return BitmapFactory.decodeFile(imagePath) ?: defaultBitmap
+                    val bitmap = BitmapFactory.decodeFile(imagePath) ?: defaultBitmap
+                    imageCache[imagePath] = bitmap
+                    return bitmap
                 }
             }
         } catch (e: Exception) {
             Log.e("NotificationService", "Error loading album art: ${e.message}")
         }
+
         return defaultBitmap
+    }
+
+    private fun loadImageFromUrlAsync(url: String) {
+        serviceScope.launch {
+            try {
+                val bitmap = withContext(Dispatchers.IO) {
+                    val connection = java.net.URL(url).openConnection()
+                    connection.connectTimeout = 5000
+                    connection.readTimeout = 10000
+                    connection.doInput = true
+                    connection.connect()
+
+                    val inputStream = connection.getInputStream()
+                    inputStream.use { BitmapFactory.decodeStream(it) }
+                }
+
+                if (bitmap != null) {
+                    imageCache[url] = bitmap
+
+                    withContext(Dispatchers.Main) {
+                        updateNotification()
+                        updateMediaSessionMetadata()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("NotificationService", "Error loading image from URL: ${e.message}")
+            }
+        }
     }
 
     private fun createContentIntent(): PendingIntent {
@@ -309,6 +368,8 @@ class NotificationService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopProgressUpdates()
+        serviceScope.cancel()
+        imageCache.clear()
         player = null
         mediaSession.release()
     }

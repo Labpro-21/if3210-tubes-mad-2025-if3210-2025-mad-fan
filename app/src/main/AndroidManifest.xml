@@ -84,9 +84,9 @@
             android:exported="false" />
 
         <!-- Notification Receiver -->
-        <receiver
-            android:name=".service.NotificationReceiver"
-            android:exported="false" />
+<!--        <receiver-->
+<!--            android:name=".service.NotificationReceiver"-->
+<!--            android:exported="false" />-->
 
 
     </application>

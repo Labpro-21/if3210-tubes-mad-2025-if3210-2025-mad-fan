@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -13,12 +13,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.model.OnlineSongResponse
 import itb.ac.id.purrytify.data.model.toSong
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
@@ -32,12 +37,26 @@ fun OnlineSongListScreen(
     onlineSongViewModel: OnlineSongViewModel = hiltViewModel(),
     songPlayerViewModel: SongPlayerViewModel,
     isGlobal: Boolean,
-    onPlay: () -> Unit
+    onPlay: () -> Unit,
+    onBackPressed: () -> Unit = {}
 ) {
     val songs = onlineSongViewModel.onlineSongs.collectAsState(emptyList())
     var selectedCountryCode by remember { mutableStateOf("ID") }
     val isLoading = onlineSongViewModel.isLoading
     val context = LocalContext.current
+
+    val gradientColors = if (isGlobal) {
+        listOf(
+            Color(0xFF1A7B72), // Teal
+            Color(0xFF1E3264)  // Dark Teal
+        )
+    } else {
+        listOf(
+            Color(0xFFFF6B6B), // Pink Red
+            Color(0xFFEC1E32)  // Red
+        )
+    }
+
     // Fetch songs when selectedCountryCode changes
     LaunchedEffect(isGlobal, selectedCountryCode) {
         if (isGlobal) {
@@ -46,77 +65,197 @@ fun OnlineSongListScreen(
             onlineSongViewModel.fetchOnlineSongsCountry(selectedCountryCode)
         }
     }
-    Column {
-        if (!isGlobal) {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Select Country",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = gradientColors + MaterialTheme.colorScheme.background,
+                    startY = 0f,
+                    endY = 1200f
                 )
-                CountrySelector(
-                    selectedCountry = selectedCountryCode,
-                    onCountrySelected = { newCode ->
-                        selectedCountryCode = newCode
+            )
+    ) {
+        // Header
+        item {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // TODO: handle back press
+                    IconButton(onClick = onBackPressed) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-                )
-                IconButton(onClick = {
-                    songs.value.forEach { song ->
-                        onlineSongViewModel.downloadSong(context, song.toSong())
+
+                    IconButton(
+                        onClick = {
+                            songs.value.forEach { song ->
+                                onlineSongViewModel.downloadSong(context, song.toSong())
+                            }
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Download All Songs",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Download,
-                        contentDescription = "Download All Songs",
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
                 }
-            }
-        } else {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Global Songs",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
-                )
-                IconButton(onClick = {
-                    songs.value.forEach { song ->
-                        onlineSongViewModel.downloadSong(context, song.toSong())
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Album Art
+                    Box(
+                        modifier = Modifier
+                            .size(180.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = gradientColors.map { it.copy(alpha = 0.8f) }
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = if (isGlobal) "Top 50" else "Top 10",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .width(120.dp)
+                                    .height(2.dp)
+                                    .background(Color.White.copy(alpha = 0.6f))
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = if (isGlobal) "GLOBAL" else "COUNTRY",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.White.copy(alpha = 0.9f),
+                                letterSpacing = 4.sp
+                            )
+                        }
                     }
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Download,
-                        contentDescription = "Download All Songs",
-                        tint = MaterialTheme.colorScheme.onPrimary
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = if (isGlobal)
+                            "Your daily update of the most played tracks right now - Global."
+                        else
+                            "Your daily update of the most played tracks right now - ${
+                                listOf(
+                                    "Indonesia" to "ID",
+                                    "Malaysia" to "MY",
+                                    "United States" to "US",
+                                    "United Kingdom" to "GB",
+                                    "Switzerland" to "CH",
+                                    "Germany" to "DE",
+                                    "Brazil" to "BR"
+                                ).find { it.second == selectedCountryCode }?.first ?: "Country"
+                            }.",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "Logo",
+                            tint = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Purrytify",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
+
+                if (!isGlobal) {
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Select Country",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            modifier = Modifier.weight(1f)
+                        )
+                        CountrySelector(
+                            selectedCountry = selectedCountryCode,
+                            onCountrySelected = { newCode ->
+                                selectedCountryCode = newCode
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
+
         if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentSize(Alignment.Center)
-            )
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = gradientColors[0]
+                    )
+                }
+            }
         } else {
-            SongList(songs.value,
-                songPlayerViewModel = songPlayerViewModel,
-                onPlay = onPlay,
-                onlineSongViewModel = onlineSongViewModel
-            )
+            itemsIndexed(songs.value) { index, song ->
+                SongItem(
+                    song = song,
+                    songNumber = index + 1,
+                    songPlayerViewModel = songPlayerViewModel,
+                    onPlay = onPlay,
+                    onlineSongViewModel = onlineSongViewModel,
+                    backgroundColor = MaterialTheme.colorScheme.background
+                )
+            }
         }
     }
-
 }
 
 @Composable
@@ -125,7 +264,6 @@ fun CountrySelector(
     onCountrySelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-
     val countries = listOf(
         "Indonesia" to "ID",
         "Malaysia" to "MY",
@@ -138,9 +276,16 @@ fun CountrySelector(
 
     Box {
         OutlinedButton(
-            onClick = { expanded = true }
+            onClick = { expanded = true },
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color.White
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.5f))
         ) {
-            Text(text = countries.find { it.second == selectedCountry }?.first ?: "Select Country")
+            Text(
+                text = countries.find { it.second == selectedCountry }?.first ?: "Select Country",
+                color = Color.White
+            )
         }
 
         DropdownMenu(
@@ -161,23 +306,15 @@ fun CountrySelector(
     }
 }
 
-
 @Composable
-fun SongList(songs: List<OnlineSongResponse>, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, onlineSongViewModel: OnlineSongViewModel) {
-    LazyColumn {
-        items(songs) { song ->
-            SongItem(
-                song,
-                songPlayerViewModel = songPlayerViewModel,
-                onPlay = onPlay,
-                onlineSongViewModel
-            )
-        }
-    }
-}
-
-@Composable
-fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, onlineSongViewModel: OnlineSongViewModel) {
+fun SongItem(
+    song: OnlineSongResponse,
+    songNumber: Int,
+    songPlayerViewModel: SongPlayerViewModel,
+    onPlay: () -> Unit,
+    onlineSongViewModel: OnlineSongViewModel,
+    backgroundColor: Color = MaterialTheme.colorScheme.background
+) {
     val context = LocalContext.current
     val showQRSheet = remember { mutableStateOf(false) }
     val showShareMenu = remember { mutableStateOf(false) }
@@ -185,12 +322,23 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .background(backgroundColor)
             .clickable {
                 songPlayerViewModel.playSong(song.toSong())
-                onPlay() }
-            .padding(16.dp),
+                onPlay()
+            }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Text(
+            text = songNumber.toString(),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            modifier = Modifier.width(32.dp)
+        )
+
+        Spacer(modifier = Modifier.width(2.dp))
+
         AsyncImage(
             model = song.artwork,
             contentDescription = null,
@@ -202,73 +350,89 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        Column {
-            Text(song.title, style = MaterialTheme.typography.bodyLarge)
-            Text(song.artist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.tertiary)
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        IconButton(onClick = { onlineSongViewModel.downloadSong(context, song.toSong()) }) {
-            Icon(
-                imageVector = Icons.Default.Download,
-                contentDescription = "Download",
-                tint = MaterialTheme.colorScheme.onPrimary
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = song.title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
+            )
+            Text(
+                text = song.artist,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                maxLines = 1
             )
         }
 
-        // share jadi dropdown option
-        Box {
-            IconButton(onClick = { showShareMenu.value = true }) {
+        Row {
+            IconButton(
+                onClick = { onlineSongViewModel.downloadSong(context, song.toSong()) }
+            ) {
                 Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = "Share",
-                    tint = MaterialTheme.colorScheme.onPrimary
+                    imageVector = Icons.Default.Download,
+                    contentDescription = "Download",
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
                 )
             }
 
-            DropdownMenu(
-                expanded = showShareMenu.value,
-                onDismissRequest = { showShareMenu.value = false },
-                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-            ) {
-                // URL
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Link,
-                                contentDescription = "Share URL",
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Share via URL")
+            // Share
+            Box {
+                IconButton(onClick = { showShareMenu.value = true }) {
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share",
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                DropdownMenu(
+                    expanded = showShareMenu.value,
+                    onDismissRequest = { showShareMenu.value = false },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                ) {
+                    // URL
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Link,
+                                    contentDescription = "Share URL",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Share via URL")
+                            }
+                        },
+                        onClick = {
+                            shareDeepLink(context, "purrytify://song/" + song.id)
+                            showShareMenu.value = false
                         }
-                    },
-                    onClick = {
-                        shareDeepLink(context, "purrytify://song/" + song.id)
-                        showShareMenu.value = false
-                    }
-                )
-
-                // QR
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.QrCode2,
-                                contentDescription = "Share QR",
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Share via QR")
+                    )
+                    // QR
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.QrCode2,
+                                    contentDescription = "Share QR",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Share via QR")
+                            }
+                        },
+                        onClick = {
+                            showQRSheet.value = true
+                            showShareMenu.value = false
                         }
-                    },
-                    onClick = {
-                        showQRSheet.value = true
-                        showShareMenu.value = false
-                    }
-                )
+                    )
+                }
             }
         }
 

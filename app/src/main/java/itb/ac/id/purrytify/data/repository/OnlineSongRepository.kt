@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.File
 import java.io.IOException
 import javax.inject.Inject
 
@@ -61,7 +62,7 @@ class OnlineSongRepository @Inject constructor(
         }
     }
 
-    private suspend fun saveOnlineSongToLocal(
+    private suspend fun saveOnlineSongToExternalStorage(
         context: Context,
         fileUrl: String,
         fileName: String,
@@ -108,6 +109,41 @@ class OnlineSongRepository @Inject constructor(
         }
     }
 
+    private suspend fun saveOnlineSongToInternalStorage(
+        context: Context,
+        fileUrl: String,
+        fileName: String,
+        mimeType: String
+    ): Uri {
+        return withContext(Dispatchers.IO) {
+            val request = Request.Builder().url(fileUrl).build()
+            val response = client.newCall(request).execute()
+            if (!response.isSuccessful) throw IOException("Download failed: $fileUrl")
+
+            // Choose subfolder inside internal storage
+            val subfolder = when {
+                mimeType.startsWith("audio") -> "music_purrytify"
+                mimeType.startsWith("image") -> "images_purrytify"
+                else -> "misc_purrytify"
+            }
+
+            val directory = File(context.filesDir, subfolder).apply {
+                if (!exists()) mkdirs()
+            }
+
+            val file = File(directory, fileName)
+
+            response.body?.byteStream()?.use { inputStream ->
+                file.outputStream().use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
+            }
+
+            Uri.fromFile(file)
+        }
+    }
+
+
     suspend fun downloadSongAndCover(
         context: Context,
         song: Song
@@ -117,8 +153,8 @@ class OnlineSongRepository @Inject constructor(
         }
         return withContext(Dispatchers.IO) {
 
-            val songUri = saveOnlineSongToLocal(context, song.filePath, song.title, "audio/mpeg")
-            val imageUri = saveOnlineSongToLocal(context, song.imagePath, "${song.title}_cover", "image/jpeg")
+            val songUri = saveOnlineSongToInternalStorage(context, song.filePath, song.title, "audio/mpeg")
+            val imageUri = saveOnlineSongToInternalStorage(context, song.imagePath, "${song.title}_cover", "image/jpeg")
 
             return@withContext song.copy(
                 songId = 0,

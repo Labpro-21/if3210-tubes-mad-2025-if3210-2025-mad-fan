@@ -54,7 +54,10 @@
         <activity
             android:name=".ui.MainActivity"
             android:theme="@style/MySplashScreen"
-            android:exported="true">
+            android:exported="true"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTop"
+            android:screenOrientation="unspecified">
         </activity>
 
         <!-- Login Activity -->

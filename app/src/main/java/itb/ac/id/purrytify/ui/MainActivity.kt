@@ -1,9 +1,5 @@
 package itb.ac.id.purrytify.ui
 
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -23,26 +19,39 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import itb.ac.id.purrytify.service.NotificationService
 import itb.ac.id.purrytify.ui.navigation.MainScreen
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import itb.ac.id.purrytify.utils.ConnectionStatus
 import itb.ac.id.purrytify.utils.NetworkConnectivityObserver
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import android.os.Build
 import android.util.Log
+import androidx.activity.enableEdgeToEdge
+import android.content.res.Configuration
 
 @AndroidEntryPoint
 class MainActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // enableEdgeToEdge() // Biar aplikasi penuh sampe ke status bar
+        enableEdgeToEdge() // Biar aplikasi penuh sampe ke status bar
         super.onCreate(savedInstanceState)
         val deepLink = intent?.data
         setContent {
             PurrytifyTheme {
                 PurrytifyApp(deepLink)
+            }
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        // ubah orientation tanpa restart activity
+        super.onConfigurationChanged(newConfig)
+        Log.d("MainActivity", "Configuration changed: ${newConfig.orientation}")
+        when (newConfig.orientation) {
+            Configuration.ORIENTATION_LANDSCAPE -> {
+                Log.d("MainActivity", "Switched to landscape mode")
+            }
+            Configuration.ORIENTATION_PORTRAIT -> {
+                Log.d("MainActivity", "Switched to portrait mode")
             }
         }
     }

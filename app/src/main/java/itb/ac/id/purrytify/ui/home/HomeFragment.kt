@@ -40,7 +40,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
-import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
 
@@ -111,23 +110,21 @@ fun HomeContent(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier
-                    .width(120.dp)
-                    .clickable { onOnlineSong("online_song_global") },
+                modifier = Modifier.width(120.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Cover
-                Image(
-                    painter = rememberAsyncImagePainter(model = R.drawable.global),
-                    contentDescription = "Global Online Song Cover",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                OnlineCover(
+                    title = "Top 50",
+                    subtitle = "Global",
+                    gradientType = "global",
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    onOnlineSong("online_song_global")
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
-                Text (
+
+                Text(
                     text = "Global",
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleSmall,
@@ -135,25 +132,24 @@ fun HomeContent(
                     overflow = TextOverflow.Ellipsis
                 )
             }
+
             Column(
-                modifier = Modifier
-                    .width(120.dp)
-                    .clickable { onOnlineSong("online_song_country") },
+                modifier = Modifier.width(120.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Cover
-                Image(
-                    painter = rememberAsyncImagePainter(model = R.drawable.country),
-                    contentDescription = "Country Online Song Cover",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
+                OnlineCover(
+                    title = "Top 10",
+                    subtitle = "Indonesia",
+                    gradientType = "country",
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    onOnlineSong("online_song_country")
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
-                Text (
-                    text = "Country",
+
+                Text(
+                    text = "Indonesia",
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,

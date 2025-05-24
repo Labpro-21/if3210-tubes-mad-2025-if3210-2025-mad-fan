@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 import itb.ac.id.purrytify.data.repository.OnlineSongRepository
+import itb.ac.id.purrytify.utils.*
 
 @HiltViewModel
 class SongPlayerViewModel @Inject constructor(
@@ -68,6 +69,13 @@ class SongPlayerViewModel @Inject constructor(
     // Notification service
     private var notificationService: NotificationService? = null
     private var serviceBound = false
+
+    private lateinit var connectivityObserver: ConnectivityObserver
+    val _networkStatus = MutableStateFlow(ConnectionStatus.Available)
+    val networkStatus: StateFlow<ConnectionStatus> = _networkStatus
+
+    var lastPosition: Long = 0L
+    var positionSeekWhileOffline: Long? = null
 
     val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -156,6 +164,15 @@ class SongPlayerViewModel @Inject constructor(
                 }
                 Player.STATE_BUFFERING -> {
                     _isBuffering.value = true
+                    Log.d("SongPlayer", "Buffering...")
+
+                    if (_currentSong.value?.isOnline == true &&
+                        _networkStatus.value != ConnectionStatus.Available
+                    ) {
+                        songPlayer.pause()
+                        _isPlaying.value = false
+                        Log.d("SongPlayer", "Paused due to no internet while buffering")
+                    }
                 }
                 Player.STATE_IDLE -> {
                     _isBuffering.value = false
@@ -165,9 +182,42 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     init {
+        observeNetwork()
         songPlayer.addListener(playerListener)
         startUpdatingPosition()
         bindNotificationService()
+    }
+
+    private fun observeNetwork() {
+        connectivityObserver = NetworkConnectivityObserver(application)
+        viewModelScope.launch {
+            connectivityObserver.observe().collect { status ->
+                _networkStatus.value = status
+                when (status) {
+                    ConnectionStatus.Available -> {
+                        Log.d("SongPlayerViewModel", "Network reconnected")
+                        if (_currentSong.value?.isOnline == true) {
+                            val resumePosition = positionSeekWhileOffline ?: lastPosition
+
+                            songPlayer.seekTo(resumePosition)
+                            positionSeekWhileOffline = null
+                            songPlayer.play()
+                            _isPlaying.value = true
+                        }
+                    }
+                    ConnectionStatus.Lost, ConnectionStatus.Unavailable -> {
+                        Log.d("SongPlayerViewModel", "Network disconnected")
+                        if (_currentSong.value?.isOnline == true) {
+                            Log.d("SongPlayer", "Network lost")
+                            lastPosition = songPlayer.currentPosition
+                            songPlayer.pause()
+                            _isPlaying.value = false
+                        }
+                    }
+                    else -> {}
+                }
+            }
+        }
     }
 
     private fun bindNotificationService() {
@@ -203,18 +253,6 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun playSong(song: Song) {
-//        val song = OnlineSongResponse(
-//            id = 71,
-//            title = "Die With A Smile",
-//            artist = "Lady Gaga, Bruno Mars",
-//            artwork = "https://storage.googleapis.com/mad-public-bucket/cover/Die%20With%20A%20Smile.png",
-//            url = "https://storage.googleapis.com/mad-public-bucket/mp3/Lady%20Gaga%2C%20Bruno%20Mars%20-%20Die%20With%20A%20Smile%20(Lyrics).mp3",
-//            duration = "4:12",
-//            country = "GLOBAL",
-//            rank = 1,
-//            createdAt = "2025-05-08T02:16:53.192Z",
-//            updatedAt = "2025-05-08T02:16:53.192Z"
-//        ).toSong(userId = 1)
         _songQueue.value = listOf(song)
         _isQueueEmpty.value = _songQueue.value.isEmpty()
         currentIndex = 0
@@ -259,12 +297,19 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun togglePlayPause() {
-        if (songPlayer.isPlaying) {
-            songPlayer.pause()
-            _isPlaying.value = false
+        if (_networkStatus.value == ConnectionStatus.Available || _currentSong.value?.isOnline == false) {
+            if (songPlayer.isPlaying) {
+                songPlayer.pause()
+                _isPlaying.value = false
+            } else {
+                songPlayer.play()
+                _isPlaying.value = true
+            }
+            return
         } else {
-            songPlayer.play()
-            _isPlaying.value = true
+            Log.d("SongPlayer", "Cannot toggle play/pause while offline for online song")
+            return
+
         }
     }
 
@@ -298,13 +343,23 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun seekTo(position: Long) {
-        songPlayer.seekTo(position)
+        if (_networkStatus.value == ConnectionStatus.Available) {
+            songPlayer.seekTo(position)
+            _position.value = position
+            positionSeekWhileOffline = null
+        } else {
+            Log.d("SongPlayer", "Queued seek to $position while offline")
+            positionSeekWhileOffline = position
+            _position.value = position
+        }
     }
 
     private fun startUpdatingPosition() {
         viewModelScope.launch {
             while (true) {
-                _position.value = songPlayer.currentPosition
+                if (positionSeekWhileOffline == null) {
+                    _position.value = songPlayer.currentPosition
+                }
                 delay(200)
             }
         }

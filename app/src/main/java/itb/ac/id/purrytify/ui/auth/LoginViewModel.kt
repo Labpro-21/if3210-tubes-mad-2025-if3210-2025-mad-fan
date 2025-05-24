@@ -27,33 +27,44 @@ class LoginViewModel @Inject constructor(
         _loginState.value = LoginState.Loading
 
         viewModelScope.launch {
-            val result = authRepository.login(email, password)
-            Log.d("Login", "Email: $email, Password: $password")
-            Log.d("Login","Login result: $result")
-            _loginState.value = if (result.isSuccess) {
-                LoginState.Success
-            } else {
-                LoginState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+            try {
+                val result = authRepository.login(email, password)
+                Log.d("Login", "Email: $email, Password: $password")
+                Log.d("Login","Login result: $result")
+                _loginState.value = if (result.isSuccess) {
+                    LoginState.Success
+                } else {
+                    LoginState.Error(result.exceptionOrNull()?.message ?: "Unknown error")
+                }
+            } catch (e: Exception) {
+                Log.e("Login", "Login failed", e)
+                _loginState.value = LoginState.Error(e.message ?: "Unknown error")
             }
         }
     }
     fun checkLogin(){
         viewModelScope.launch {
-            // Check if the user is logged in then go to MainActivity
-            if (authRepository.verifyToken().isSuccessful) {
-                Log.d("MainActivity", "Token is valid")
-                _loginState.value = LoginState.Success
-            } else { // Token is invalid then refresh the token
-                Log.d("MainActivity", "Token is invalid")
-                if (authRepository.refreshToken().isSuccessful) {
-                    // Token is refreshed successfully go to main
-                    Log.d("MainActivity", "Token is refreshed")
+            try {
+                // Check if the user is logged in then go to MainActivity
+                if (authRepository.verifyToken().isSuccessful) {
+                    Log.d("MainActivity", "Token is valid")
                     _loginState.value = LoginState.Success
-                } else {
-                    Log.d("MainActivity", "Token refresh failed")
-                    // Token refresh failed, go to login
+                } else { // Token is invalid then refresh the token
+                    Log.d("MainActivity", "Token is invalid")
+                    if (authRepository.refreshToken().isSuccessful) {
+                        // Token is refreshed successfully go to main
+                        Log.d("MainActivity", "Token is refreshed")
+                        _loginState.value = LoginState.Success
+                    } else {
+                        Log.d("MainActivity", "Token refresh failed")
+                        // Token refresh failed, go to login
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e("Login", "Checking login state failed", e)
+                _loginState.value = LoginState.Error(e.message ?: "Unknown error")
             }
+
         }
     }
     fun resetLoginState() {

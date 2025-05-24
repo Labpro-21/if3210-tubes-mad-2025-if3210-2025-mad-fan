@@ -120,6 +120,9 @@ fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: Nav
                 onPlay = {
                     songPlayerViewModel.setLastScreenRoute("online_song_global")
                     navController.navigate("track_view")
+                },
+                onBackPressed = {
+                    navController.popBackStack()
                 }
             )
         }
@@ -130,6 +133,9 @@ fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: Nav
                 onPlay = {
                     songPlayerViewModel.setLastScreenRoute("online_song_country")
                     navController.navigate("track_view")
+                },
+                onBackPressed = {
+                    navController.popBackStack()
                 }
             )
         }

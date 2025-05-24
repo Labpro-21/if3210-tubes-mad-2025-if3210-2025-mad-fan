@@ -1,6 +1,7 @@
 package itb.ac.id.purrytify.data.repository
 import itb.ac.id.purrytify.data.api.ApiService
 import itb.ac.id.purrytify.data.model.ProfileResponse
+import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -8,10 +9,15 @@ import okhttp3.RequestBody
 class UserRepository @Inject constructor(
     private val apiService: ApiService
 ){
+    private val _location = MutableStateFlow("")
+    val location: StateFlow<String> = _location.asStateFlow()
+
+
     suspend fun getProfile(): ProfileResponse {
         return try {
             val response = apiService.getProfile()
             if (response.isSuccessful) {
+                _location.value = response.body()?.location ?: ""
                 response.body()?.let {
                     ProfileResponse(
                         id = it.id,
@@ -25,6 +31,18 @@ class UserRepository @Inject constructor(
                 } ?: throw Exception("Profile not found")
             } else {
                 throw Exception("Failed to get profile")
+            }
+        } catch (e: Exception) {
+            throw e
+        }
+    }
+    suspend fun getUserLocation() {
+        try {
+            val response = apiService.getProfile()
+            if (response.isSuccessful) {
+                _location.value = response.body()?.location ?: ""
+            } else {
+                throw Exception("Failed to get location")
             }
         } catch (e: Exception) {
             throw e
@@ -46,10 +64,11 @@ class UserRepository @Inject constructor(
         location: RequestBody? = null,
         profilePhoto: MultipartBody.Part? = null
     ): ProfileResponse {
-        return try {
+        try {
             val response = apiService.updateProfile(location, profilePhoto)
             if (response.isSuccessful) {
-                response.body()?.let {
+                _location .value = response.body()?.location ?: ""
+                return response.body()?.let {
                     ProfileResponse(
                         id = it.id,
                         username = it.username,

@@ -73,7 +73,7 @@ fun OnlineSongListScreen(
                     Icon(
                         imageVector = Icons.Default.Download,
                         contentDescription = "Download All Songs",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -97,7 +97,7 @@ fun OnlineSongListScreen(
                     Icon(
                         imageVector = Icons.Default.Download,
                         contentDescription = "Download All Songs",
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -173,14 +173,15 @@ fun SongList(songs: List<OnlineSongResponse>, songPlayerViewModel: SongPlayerVie
                 onlineSongViewModel
             )
         }
-
     }
 }
 
 @Composable
 fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, onlineSongViewModel: OnlineSongViewModel) {
     val context = LocalContext.current
-    val showSheet = remember { mutableStateOf(false) }
+    val showQRSheet = remember { mutableStateOf(false) }
+    val showShareMenu = remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -195,7 +196,7 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
             contentDescription = null,
             modifier = Modifier
                 .size(60.dp)
-                .clip(RoundedCornerShape(12.dp)),
+                .clip(RoundedCornerShape(6.dp)),
             contentScale = ContentScale.Crop
         )
 
@@ -210,32 +211,74 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
             Icon(
                 imageVector = Icons.Default.Download,
                 contentDescription = "Download",
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.onPrimary
             )
         }
-        IconButton(onClick = { shareDeepLink(context, "purrytify://song/" + song.id) }) {
-            Icon(
-                imageVector = Icons.Default.Share,
-                contentDescription = "Share",
-                tint = MaterialTheme.colorScheme.primary
-            )
+
+        // share jadi dropdown option
+        Box {
+            IconButton(onClick = { showShareMenu.value = true }) {
+                Icon(
+                    imageVector = Icons.Default.Share,
+                    contentDescription = "Share",
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+            }
+
+            DropdownMenu(
+                expanded = showShareMenu.value,
+                onDismissRequest = { showShareMenu.value = false },
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+            ) {
+                // URL
+                DropdownMenuItem(
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Link,
+                                contentDescription = "Share URL",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Share via URL")
+                        }
+                    },
+                    onClick = {
+                        shareDeepLink(context, "purrytify://song/" + song.id)
+                        showShareMenu.value = false
+                    }
+                )
+
+                // QR
+                DropdownMenuItem(
+                    text = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.QrCode2,
+                                contentDescription = "Share QR",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Share via QR")
+                        }
+                    },
+                    onClick = {
+                        showQRSheet.value = true
+                        showShareMenu.value = false
+                    }
+                )
+            }
         }
-        IconButton(onClick = {
-            showSheet.value = true
-        }) {
-            Icon(
-                imageVector = Icons.Default.QrCode2,
-                contentDescription = "QR Code",
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-        if (showSheet.value) {
+
+        if (showQRSheet.value) {
             CreateQRModalBottomSheet(
                 context = context,
                 title = song.title,
                 artist = song.artist,
                 deepLink = "purrytify://song/${song.id}",
-                onDismiss = { showSheet.value = false }
+                onDismiss = { showQRSheet.value = false }
             )
         }
     }

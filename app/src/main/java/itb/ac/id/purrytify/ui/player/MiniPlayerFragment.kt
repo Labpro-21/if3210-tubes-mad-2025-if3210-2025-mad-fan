@@ -21,6 +21,7 @@ import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.onlinesong.OnlineSongViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
+import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.CreateQRModalBottomSheet
 import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.shareDeepLink
 
 @Composable
@@ -31,6 +32,10 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
     val onlineSongViewModel = hiltViewModel<OnlineSongViewModel>()
     val context = LocalContext.current
     val deepLink = "purrytify://song/${currentSong?.songId}"
+
+    val showQRSheet = remember { mutableStateOf(false) }
+    val showShareMenu = remember { mutableStateOf(false) }
+
     if (currentSong != null) {
         Surface(
             modifier = Modifier
@@ -38,8 +43,7 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                 .clip(RoundedCornerShape(12.dp))
                 .clickable { onExpand() },
             color = Color(0x8e550a1c),
-
-            ) {
+        ) {
             Column {
                 Row(
                     modifier = Modifier.padding(8.dp),
@@ -58,15 +62,63 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                         Text(currentSong!!.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
                         Text(currentSong!!.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                     }
-                    IconButton(onClick = {
-                        shareDeepLink(context, deepLink)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            tint = Color.White,
-                            contentDescription = "Share"
-                        )
+
+                    // share jadi dropdown option
+                    Box {
+                        IconButton(onClick = { showShareMenu.value = true }) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                tint = Color.White,
+                                contentDescription = "Share",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showShareMenu.value,
+                            onDismissRequest = { showShareMenu.value = false },
+                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Link,
+                                            contentDescription = "Share URL",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Share via URL")
+                                    }
+                                },
+                                onClick = {
+                                    shareDeepLink(context, deepLink)
+                                    showShareMenu.value = false
+                                }
+                            )
+
+                            DropdownMenuItem(
+                                text = {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.QrCode2,
+                                            contentDescription = "Share QR",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Share via QR")
+                                    }
+                                },
+                                onClick = {
+                                    showQRSheet.value = true
+                                    showShareMenu.value = false
+                                }
+                            )
+                        }
                     }
+
                     IconButton(onClick = { viewModel.previousSong() }) {
                         Icon(
                             Icons.Default.SkipPrevious,
@@ -106,7 +158,16 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                     gapSize = 0.dp,
                 )
             }
+        }
 
+        if (showQRSheet.value) {
+            CreateQRModalBottomSheet(
+                context = context,
+                title = currentSong!!.title,
+                artist = currentSong!!.artist,
+                deepLink = deepLink,
+                onDismiss = { showQRSheet.value = false }
+            )
         }
     }
 }

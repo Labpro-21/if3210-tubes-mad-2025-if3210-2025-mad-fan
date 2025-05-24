@@ -19,6 +19,12 @@ import itb.ac.id.purrytify.ui.library.LibraryScreen
 import itb.ac.id.purrytify.ui.onlinesong.OnlineSongListScreen
 import itb.ac.id.purrytify.ui.player.*
 import itb.ac.id.purrytify.ui.profile.ProfileScreen
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun MainScreen(navController: NavHostController, songPlayerViewModel: SongPlayerViewModel, deepLink: Uri?) {
@@ -99,7 +105,6 @@ fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: Nav
                 onBack = {
                     val lastRoute = songPlayerViewModel.getLastScreenRoute()
                     Log.d("Navigation", "Going back to last route: $lastRoute")
-
                     navController.popBackStack()
                     if (navController.currentBackStackEntry?.destination?.route != lastRoute) {
                         navController.navigate(lastRoute) {
@@ -144,6 +149,9 @@ fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: Nav
 
 @Composable
 fun BottomNavigation(navController: NavHostController, songPlayerViewModel: SongPlayerViewModel) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     val items = listOf(
         NavigationItem.Home,
         NavigationItem.Library,
@@ -152,12 +160,18 @@ fun BottomNavigation(navController: NavHostController, songPlayerViewModel: Song
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground,
+        modifier = if (isLandscape) {
+            Modifier.height(60.dp)
+        } else {
+            Modifier
+        }
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
         val isNonMainScreen = currentRoute != NavigationItem.Home.route &&
                 currentRoute != NavigationItem.Library.route &&
                 currentRoute != NavigationItem.Profile.route
+
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
@@ -169,10 +183,22 @@ fun BottomNavigation(navController: NavHostController, songPlayerViewModel: Song
                                 item.iconResId
                             }
                         ),
-                        contentDescription = item.title
+                        contentDescription = item.title,
+                        modifier = if (isLandscape) {
+                            Modifier.size(20.dp)
+                        } else {
+                            Modifier.size(24.dp)
+                        }
                     )
                 },
-                label = { Text(text = item.title) },
+                label = if (isLandscape) null else {
+                    {
+                        Text(
+                            text = item.title,
+                            fontSize = 12.sp
+                        )
+                    }
+                },
                 selected = currentRoute == item.route,
                 onClick = {
                     Log.d("Navigation", "Clicked on: ${item.route}, current route: $currentRoute")

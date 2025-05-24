@@ -18,14 +18,12 @@ import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.data.model.toSong
 import itb.ac.id.purrytify.service.NotificationService
 import itb.ac.id.purrytify.ui.navigation.NavigationItem
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
 import itb.ac.id.purrytify.data.repository.OnlineSongRepository
 import itb.ac.id.purrytify.utils.*
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 @HiltViewModel
 class SongPlayerViewModel @Inject constructor(
@@ -188,35 +186,44 @@ class SongPlayerViewModel @Inject constructor(
         bindNotificationService()
     }
 
+    @OptIn(FlowPreview::class)
     private fun observeNetwork() {
         connectivityObserver = NetworkConnectivityObserver(application)
         viewModelScope.launch {
-            connectivityObserver.observe().collect { status ->
-                _networkStatus.value = status
-                when (status) {
-                    ConnectionStatus.Available -> {
-                        Log.d("SongPlayerViewModel", "Network reconnected")
-                        if (_currentSong.value?.isOnline == true) {
-                            val resumePosition = positionSeekWhileOffline ?: lastPosition
+            connectivityObserver.observe().debounce(500).collect { status ->
+                Log.d("SongPlayerViewModel", "Network status changed: $status")
+                handleNetworkChanges(status)
+            }
+        }
+    }
 
-                            songPlayer.seekTo(resumePosition)
-                            positionSeekWhileOffline = null
-                            songPlayer.play()
-                            _isPlaying.value = true
-                        }
+    private fun handleNetworkChanges(status: ConnectionStatus) {
+        _networkStatus.value = status
+        when (status) {
+            ConnectionStatus.Available -> {
+                Log.d("SongPlayerViewModel", "Network reconnected")
+                if (_currentSong.value?.isOnline == true) {
+                    val resumePosition = positionSeekWhileOffline ?: lastPosition
+                    if (songPlayer.currentPosition != resumePosition) {
+                        songPlayer.seekTo(resumePosition)
                     }
-                    ConnectionStatus.Lost, ConnectionStatus.Unavailable -> {
-                        Log.d("SongPlayerViewModel", "Network disconnected")
-                        if (_currentSong.value?.isOnline == true) {
-                            Log.d("SongPlayer", "Network lost")
-                            lastPosition = songPlayer.currentPosition
-                            songPlayer.pause()
-                            _isPlaying.value = false
-                        }
+                    positionSeekWhileOffline = null
+                    if (!songPlayer.isPlaying) {
+                        songPlayer.play()
+                        _isPlaying.value = true
                     }
-                    else -> {}
                 }
             }
+            ConnectionStatus.Lost, ConnectionStatus.Unavailable -> {
+                Log.d("SongPlayerViewModel", "Network disconnected")
+                if (_currentSong.value?.isOnline == true) {
+                    lastPosition = songPlayer.currentPosition
+                    positionSeekWhileOffline = null
+                    songPlayer.pause()
+                    _isPlaying.value = false
+                }
+            }
+            else -> {}
         }
     }
 

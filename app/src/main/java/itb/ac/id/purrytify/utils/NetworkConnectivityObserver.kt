@@ -37,17 +37,33 @@ class NetworkConnectivityObserver(
 
                 override fun onLosing(network: Network, maxMsToLive: Int) {
                     super.onLosing(network, maxMsToLive)
-                    launch { send(ConnectionStatus.Losing) }
+                    val currentStatus = getCurrentConnectivityStatus(connectivityManager)
+                    if (currentStatus != ConnectionStatus.Available) {
+                        launch { send(ConnectionStatus.Losing) }
+                    } else {
+                        Log.d("Network", "Ignored Losing event — another network is still available")
+                    }
                 }
 
                 override fun onLost(network: Network) {
                     super.onLost(network)
-                    launch { send(ConnectionStatus.Lost) }
+                    // Check if any active network still has INTERNET
+                    val currentStatus = getCurrentConnectivityStatus(connectivityManager)
+                    if (currentStatus != ConnectionStatus.Available) {
+                        launch { send(ConnectionStatus.Lost) }
+                    } else {
+                        Log.d("Network", "Ignored Lost event — another network is still available")
+                    }
                 }
 
                 override fun onUnavailable() {
                     super.onUnavailable()
-                    launch { send(ConnectionStatus.Unavailable) }
+                    val currentStatus = getCurrentConnectivityStatus(connectivityManager)
+                    if (currentStatus != ConnectionStatus.Available) {
+                        launch { send(ConnectionStatus.Unavailable) }
+                    } else {
+                        Log.d("Network", "Ignored Unavailable event — another network is still available")
+                    }
                 }
             }
 

@@ -16,11 +16,19 @@ class AuthInterceptor @Inject constructor(private val tokenManager: TokenManager
             .build()
 
         Log.d("AuthInterceptor", "Access token: $accessToken")
-        val response = chain.proceed(request)
+        return try {
+            val response = chain.proceed(request)
 
-        if (response.code == 401) {
-            Log.e("AuthInterceptor","Token expired, refreshing token")
+            if (response.code == 401) {
+                Log.e("AuthInterceptor", "Token expired, refreshing token")
+            }
+
+            response
+        } catch (e: Exception) {
+            Log.e("AuthInterceptor", "Network error: ${e.localizedMessage}", e)
+
+            // Rethrow the exception to let the repository/viewmodel catch it
+            throw e
         }
-        return response
     }
 }

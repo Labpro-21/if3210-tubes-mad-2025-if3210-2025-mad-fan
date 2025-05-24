@@ -23,9 +23,11 @@ class AuthRepository @Inject constructor(
                 tokenManager.saveCurrentUserID(userID)
                 Result.success(Unit)
             } else {
+                Log.e("AuthRepository", "Login failed with code: ${response.code()}")
                 Result.failure(Exception("Login failed"))
             }
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Execoption during login: ${e.localizedMessage}", e)
             Result.failure(e)
         }
     }

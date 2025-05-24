@@ -238,7 +238,7 @@ fun SongItem(song: OnlineSongResponse, songPlayerViewModel: SongPlayerViewModel,
                                 imageVector = Icons.Default.Link,
                                 contentDescription = "Share URL",
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(12.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Share via URL")

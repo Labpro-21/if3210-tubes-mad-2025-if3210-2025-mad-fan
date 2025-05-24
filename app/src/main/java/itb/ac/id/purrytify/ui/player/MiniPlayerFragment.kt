@@ -64,58 +64,58 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
                     }
 
                     // share jadi dropdown option
-                    Box {
-                        IconButton(onClick = { showShareMenu.value = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                tint = Color.White,
-                                contentDescription = "Share",
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = showShareMenu.value,
-                            onDismissRequest = { showShareMenu.value = false },
-                            modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.Link,
-                                            contentDescription = "Share URL",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Share via URL")
+                    if (currentSong!!.isOnline) {
+                        Box {
+                            IconButton(onClick = { showShareMenu.value = true }) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    tint = Color.White,
+                                    contentDescription = "Share",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showShareMenu.value,
+                                onDismissRequest = { showShareMenu.value = false },
+                                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                            ) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Link,
+                                                contentDescription = "Share URL",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Share via URL")
+                                        }
+                                    },
+                                    onClick = {
+                                        shareDeepLink(context, deepLink)
+                                        showShareMenu.value = false
                                     }
-                                },
-                                onClick = {
-                                    shareDeepLink(context, deepLink)
-                                    showShareMenu.value = false
-                                }
-                            )
-
-                            DropdownMenuItem(
-                                text = {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.QrCode2,
-                                            contentDescription = "Share QR",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Share via QR")
+                                )
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.QrCode2,
+                                                contentDescription = "Share QR",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text("Share via QR")
+                                        }
+                                    },
+                                    onClick = {
+                                        showQRSheet.value = true
+                                        showShareMenu.value = false
                                     }
-                                },
-                                onClick = {
-                                    showQRSheet.value = true
-                                    showShareMenu.value = false
-                                }
-                            )
+                                )
+                            }
                         }
                     }
 

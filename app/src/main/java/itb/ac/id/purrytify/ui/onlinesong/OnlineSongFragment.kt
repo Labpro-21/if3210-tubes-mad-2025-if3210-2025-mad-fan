@@ -1,5 +1,6 @@
 package itb.ac.id.purrytify.ui.onlinesong
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -27,6 +28,7 @@ import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.model.OnlineSongResponse
 import itb.ac.id.purrytify.data.model.toSong
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
+import itb.ac.id.purrytify.ui.profile.NoInternetScreen
 import itb.ac.id.purrytify.utils.OnlineSongUtil
 import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.CreateQRModalBottomSheet
 import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.generateQRBitmap
@@ -42,8 +44,9 @@ fun OnlineSongListScreen(
     onBackPressed: () -> Unit = {}
 ) {
     val songs = onlineSongViewModel.onlineSongs.collectAsState(emptyList())
-    var selectedCountryCode by remember { mutableStateOf("ID") }
+    val selectedCountryCode = onlineSongViewModel.location.collectAsState()
     val isLoading = onlineSongViewModel.isLoading
+    val isNetworkAvailable = onlineSongViewModel.networkAvailable.collectAsState()
     val context = LocalContext.current
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -60,12 +63,31 @@ fun OnlineSongListScreen(
         )
     }
 
+    // Show no internet screen if network is not available
+    if (!isNetworkAvailable.value) {
+        NoInternetScreen(onRetryClick = {
+            if (isGlobal) {
+                onlineSongViewModel.fetchOnlineSongsGlobal()
+            } else {
+                onlineSongViewModel.fetchOnlineSongsCountry(selectedCountryCode.value)
+            }
+        })
+        return
+    }
+
     // Fetch songs when selectedCountryCode changes
-    LaunchedEffect(isGlobal, selectedCountryCode) {
-        if (isGlobal) {
-            onlineSongViewModel.fetchOnlineSongsGlobal()
+    LaunchedEffect(isGlobal, selectedCountryCode.value) {
+        if (isNetworkAvailable.value) {
+            Log.d("Network", "Network available fetching song: ${isNetworkAvailable.value}")
+            Log.d("OnlineSongListScreen", "Fetching online songs")
+            if (isGlobal) {
+                onlineSongViewModel.fetchOnlineSongsGlobal()
+            } else {
+                Log.d("OnlineSongListScreen", "Fetching online songs for country: ${selectedCountryCode.value}")
+                onlineSongViewModel.fetchOnlineSongsCountry(selectedCountryCode.value)
+            }
         } else {
-            onlineSongViewModel.fetchOnlineSongsCountry(selectedCountryCode)
+            Log.d("OnlineSongListScreen", "Network is not available, skipping fetch")
         }
     }
 
@@ -114,16 +136,16 @@ fun OnlineSongListScreen(
                             )
                         }
                         // country selector landscape
-                        if (!isGlobal) {
-                            CountrySelector(
-                                selectedCountry = selectedCountryCode,
-                                onCountrySelected = { newCode ->
-                                    selectedCountryCode = newCode
-                                }
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.width(1.dp))
-                        }
+//                        if (!isGlobal) {
+//                            CountrySelector(
+//                                selectedCountry = selectedCountryCode,
+//                                onCountrySelected = { newCode ->
+//                                    selectedCountryCode = newCode
+//                                }
+//                            )
+//                        } else {
+//                            Spacer(modifier = Modifier.width(1.dp))
+//                        }
                         IconButton(
                             onClick = {
                                 songs.value.forEach { song ->
@@ -196,7 +218,7 @@ fun OnlineSongListScreen(
                                     "Switzerland" to "CH",
                                     "Germany" to "DE",
                                     "Brazil" to "BR"
-                                ).find { it.second == selectedCountryCode }?.first ?: "Country"
+                                ).find { it.second == selectedCountryCode.value }?.first ?: "Country"
                             }.",
                         color = Color.White.copy(alpha = 0.8f),
                         fontSize = 12.sp,
@@ -263,15 +285,32 @@ fun OnlineSongListScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        itemsIndexed(songs.value) { index, song ->
-                            SongItem(
-                                song = song,
-                                songNumber = index + 1,
-                                songPlayerViewModel = songPlayerViewModel,
-                                onPlay = onPlay,
-                                onlineSongViewModel = onlineSongViewModel,
-                                backgroundColor = MaterialTheme.colorScheme.background
-                            )
+                        if (songs.value.isEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No songs available",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                }
+                            }
+                        } else {
+                            itemsIndexed(songs.value) { index, song ->
+                                SongItem(
+                                    song = song,
+                                    songNumber = index + 1,
+                                    songPlayerViewModel = songPlayerViewModel,
+                                    onPlay = onPlay,
+                                    onlineSongViewModel = onlineSongViewModel,
+                                    backgroundColor = MaterialTheme.colorScheme.background
+                                )
+                            }
                         }
                     }
                 }
@@ -382,7 +421,7 @@ fun OnlineSongListScreen(
                                         "Switzerland" to "CH",
                                         "Germany" to "DE",
                                         "Brazil" to "BR"
-                                    ).find { it.second == selectedCountryCode }?.first ?: "Country"
+                                    ).find { it.second == selectedCountryCode.value }?.first ?: "Country"
                                 }.",
                             color = Color.White.copy(alpha = 0.8f),
                             fontSize = 14.sp,
@@ -407,27 +446,27 @@ fun OnlineSongListScreen(
                         }
                         Spacer(modifier = Modifier.height(32.dp))
                     }
-                    if (!isGlobal) {
-                        Row(
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Select Country",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White,
-                                modifier = Modifier.weight(1f)
-                            )
-                            CountrySelector(
-                                selectedCountry = selectedCountryCode,
-                                onCountrySelected = { newCode ->
-                                    selectedCountryCode = newCode
-                                }
-                            )
-                        }
-                    }
+//                    if (!isGlobal) {
+//                        Row(
+//                            modifier = Modifier
+//                                .padding(horizontal = 16.dp, vertical = 8.dp)
+//                                .fillMaxWidth(),
+//                            verticalAlignment = Alignment.CenterVertically
+//                        ) {
+//                            Text(
+//                                text = "Select Country",
+//                                style = MaterialTheme.typography.titleMedium,
+//                                color = Color.White,
+//                                modifier = Modifier.weight(1f)
+//                            )
+//                            CountrySelector(
+//                                selectedCountry = selectedCountryCode,
+//                                onCountrySelected = { newCode ->
+//                                    selectedCountryCode = newCode
+//                                }
+//                            )
+//                        }
+//                    }
 
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -447,15 +486,32 @@ fun OnlineSongListScreen(
                     }
                 }
             } else {
-                itemsIndexed(songs.value) { index, song ->
-                    SongItem(
-                        song = song,
-                        songNumber = index + 1,
-                        songPlayerViewModel = songPlayerViewModel,
-                        onPlay = onPlay,
-                        onlineSongViewModel = onlineSongViewModel,
-                        backgroundColor = MaterialTheme.colorScheme.background
-                    )
+                if (songs.value.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No songs available",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }else {
+                    itemsIndexed(songs.value) { index, song ->
+                        SongItem(
+                            song = song,
+                            songNumber = index + 1,
+                            songPlayerViewModel = songPlayerViewModel,
+                            onPlay = onPlay,
+                            onlineSongViewModel = onlineSongViewModel,
+                            backgroundColor = MaterialTheme.colorScheme.background
+                        )
+                    }
                 }
             }
         }

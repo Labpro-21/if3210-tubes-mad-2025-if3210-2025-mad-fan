@@ -77,6 +77,19 @@
             </intent-filter>
         </activity>
 
+        <!-- QR Scanner Activity -->
+        <activity
+            android:name=".ui.home.QRScannerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Purrytify" />
+
+        <!-- CaptureActivity untuk ZXing -->
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation" />
+
         <!-- Notification Service -->
         <service
             android:name=".service.NotificationService"

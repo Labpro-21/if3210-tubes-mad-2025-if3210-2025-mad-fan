@@ -334,8 +334,9 @@ class SongPlayerViewModel @Inject constructor(
         if (queue.isEmpty() || currentIndex >= queue.lastIndex) {
             if (_repeatMode.value == RepeatMode.ALL) {
                 playAtIndex(0)
+            }else{
+                stopSong()
             }
-            stopSong()
             return
         }
         Log.d("SongPlayer", "Playing current song: ${queue[currentIndex].title}")

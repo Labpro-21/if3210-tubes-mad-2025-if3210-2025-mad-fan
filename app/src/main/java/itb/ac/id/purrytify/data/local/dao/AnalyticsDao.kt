@@ -56,7 +56,6 @@ interface AnalyticsDao {
     @Query("SELECT * FROM monthly_analytics WHERE userID = :userID ORDER BY month DESC")
     fun getAllMonthlyAnalytics(userID: Int): Flow<List<MonthlyAnalytics>>
     
-    // Day Streaks calculation - simplified to work without listening_session table
     @Query("""
         SELECT songTitle, songArtist, 
                COUNT(DISTINCT date) as streakDays,

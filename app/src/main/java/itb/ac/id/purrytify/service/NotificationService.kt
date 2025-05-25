@@ -34,6 +34,7 @@ class NotificationService : Service() {
         private const val CHANNEL_ID = "purrytify_playback_channel"
         private const val NOTIFICATION_ID = 1
         const val ACTION_TOGGLE_FAVORITE = "itb.ac.id.purrytify.ACTION_TOGGLE_FAVORITE"
+        const val ACTION_DISMISS_STOP = "itb.ac.id.purrytify.ACTION_DISMISS_STOP"
         const val ACTION_MUSIC_CONTROL = "itb.ac.id.purrytify.ACTION_MUSIC_CONTROL"
     }
 
@@ -52,6 +53,7 @@ class NotificationService : Service() {
         fun onPrevious()
         fun onStop()
         fun onToggleFavorite()
+        fun onDismissStop()
 //        fun onSeek(position: Long)
     }
 
@@ -122,6 +124,13 @@ class NotificationService : Service() {
                         Log.d("NotificationService", "Favorite clicked from MediaSession")
                         playerCallback?.onToggleFavorite()
                         sendActionToActivity("TOGGLE_FAVORITE")
+                    }
+                    ACTION_DISMISS_STOP -> {
+                        Log.d("NotificationService", "Dismiss/Stop clicked from MediaSession")
+                        playerCallback?.onDismissStop()
+                        sendActionToActivity("DISMISS_STOP")
+                        stopForeground(true)
+                        stopSelf()
                     }
                 }
             }
@@ -243,6 +252,14 @@ class NotificationService : Service() {
 
             playbackStateBuilder.addCustomAction(customFavoriteAction)
         }
+
+        val customDismissStopAction = PlaybackStateCompat.CustomAction.Builder(
+            ACTION_DISMISS_STOP,
+            "Dismiss and Stop",
+            R.drawable.ic_close
+        ).build()
+
+        playbackStateBuilder.addCustomAction(customDismissStopAction)
 
         mediaSession.setPlaybackState(playbackStateBuilder.build())
 

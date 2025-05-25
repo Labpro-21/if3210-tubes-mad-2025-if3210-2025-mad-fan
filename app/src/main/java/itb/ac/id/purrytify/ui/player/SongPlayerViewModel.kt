@@ -117,6 +117,9 @@ class SongPlayerViewModel @Inject constructor(
                     Log.d("SongPlayerViewModel", "onToggleFavorite callback triggered")
                     toggleFavorite()
                 }
+                override fun onDismissStop() {
+                    stopSong()
+                }
             })
         }
 

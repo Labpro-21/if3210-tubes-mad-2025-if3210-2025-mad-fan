@@ -113,7 +113,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .size(80.dp)
                     .align(Alignment.TopCenter)
-                    .offset(y = (maxHeight * 0.5f) - 40.dp),
+                    .offset(y = (maxHeight * 0.5f) - 100.dp),
 
             )
 
@@ -121,7 +121,7 @@ fun LoginScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp)
-                    .padding(top = (maxHeight * 0.5f) + 32.dp),
+                    .padding(top = (maxHeight * 0.5f) - 28.dp),
                 verticalArrangement = Arrangement.Top,
 
             ) {

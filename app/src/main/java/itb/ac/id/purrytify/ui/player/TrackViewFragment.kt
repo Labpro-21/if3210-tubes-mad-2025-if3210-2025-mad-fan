@@ -414,21 +414,6 @@ fun TrackViewFragment(
                                 onDismissRequest = { showMenu = false },
                                 modifier = Modifier.background(DavyGrey)
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("Edit Song") },
-                                    onClick = {
-                                        showMenu = false
-                                        showSheet = true
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Delete Song") },
-                                    onClick = {
-                                        showMenu = false
-                                        viewModel.deleteSong()
-                                        onBack()
-                                    }
-                                )
                                 if (song!!.isOnline) {
                                     DropdownMenuItem(
                                         text = { Text("Download Song") },
@@ -449,6 +434,22 @@ fun TrackViewFragment(
                                         onClick = {
                                             showMenu = false
                                             showSheetQR = true
+                                        }
+                                    )
+                                } else {
+                                    DropdownMenuItem(
+                                        text = { Text("Edit Song") },
+                                        onClick = {
+                                            showMenu = false
+                                            showSheet = true
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Delete Song") },
+                                        onClick = {
+                                            showMenu = false
+                                            viewModel.deleteSong()
+                                            onBack()
                                         }
                                     )
                                 }

@@ -10,6 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,10 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import itb.ac.id.purrytify.R
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class TopArtist(
     val rank: Int,
@@ -34,19 +42,8 @@ fun TopArtistsScreen(
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // dummy
-    val topArtists = listOf(
-        TopArtist(1, "Beatles", R.drawable.profile_dummy),
-        TopArtist(2, "The Weeknd", R.drawable.profile_dummy),
-        TopArtist(3, "Kanye West", R.drawable.profile_dummy),
-        TopArtist(4, "Doechii", R.drawable.profile_dummy),
-        TopArtist(5, "Daniel Caesar", R.drawable.profile_dummy),
-        TopArtist(6, "Frank Ocean", R.drawable.profile_dummy),
-        TopArtist(7, "Tyler, The Creator", R.drawable.profile_dummy),
-        TopArtist(8, "Kendrick Lamar", R.drawable.profile_dummy),
-        TopArtist(9, "SZA", R.drawable.profile_dummy),
-        TopArtist(10, "Mac Miller", R.drawable.profile_dummy)
-    )
+    val viewModel: SoundCapsuleViewModel = hiltViewModel()
+    val analyticsUiState by viewModel.analyticsState.collectAsState()
 
     Column(
         modifier = modifier
@@ -78,8 +75,11 @@ fun TopArtistsScreen(
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
+            val currentMonth = YearMonth.now()
+            val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            
             Text(
-                text = "April 2025",
+                text = currentMonth.format(monthFormatter),
                 color = Color.Gray,
                 fontSize = 14.sp
             )
@@ -95,7 +95,7 @@ fun TopArtistsScreen(
                     lineHeight = 28.sp
                 )
                 Text(
-                    text = "137 artists",
+                    text = "${analyticsUiState.topArtists.size} artists",
                     color = Color(0xFF2196F3),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
@@ -113,22 +113,51 @@ fun TopArtistsScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // list artist
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp)
-        ) {
-            itemsIndexed(topArtists) { index, artist ->
-                Column {
-                    TopArtistItem(
-                        artist = artist,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                    if (index < topArtists.size - 1) {
-                        HorizontalDivider(
-                            color = Color.Gray.copy(alpha = 0.3f),
-                            thickness = 0.5.dp
+        if (analyticsUiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        } else if (analyticsUiState.topArtists.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No artists data available.\nStart listening to music!",
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    fontSize = 16.sp
+                )
+            }
+        } else {
+            // list artist
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                itemsIndexed(analyticsUiState.topArtists) { index, artistData ->
+                    Column {
+                        TopArtistItem(
+                            artist = TopArtist(
+                                rank = index + 1,
+                                name = artistData.artist,
+                                imageId = R.drawable.profile_dummy
+                            ),
+                            modifier = Modifier.padding(vertical = 12.dp)
                         )
+                        if (index < analyticsUiState.topArtists.size - 1) {
+                            HorizontalDivider(
+                                color = Color.Gray.copy(alpha = 0.3f),
+                                thickness = 0.5.dp
+                            )
+                        }
                     }
                 }
             }

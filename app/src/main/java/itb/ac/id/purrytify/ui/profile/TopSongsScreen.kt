@@ -9,7 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,7 +21,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import itb.ac.id.purrytify.R
+import itb.ac.id.purrytify.data.local.entity.SongPlayCount
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 data class TopSong(
     val rank: Int,
@@ -29,6 +34,7 @@ data class TopSong(
     val artist: String,
     val albumName: String,
     val plays: Int,
+    val listeningTimeMinutes: Long,
     val imageId: Int
 )
 
@@ -36,21 +42,28 @@ data class TopSong(
 @Composable
 fun TopSongsScreen(
     onBackClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: SoundCapsuleViewModel = hiltViewModel()
 ) {
-    // dummy
-    val topSongs = listOf(
-        TopSong(1, "Starboy", "The Weeknd", "Daft Punk", 15, R.drawable.profile_dummy),
-        TopSong(2, "Loose", "Daniel Caesar", "", 12, R.drawable.profile_dummy),
-        TopSong(3, "Nights", "Frank Ocean", "Blond", 8, R.drawable.profile_dummy),
-        TopSong(4, "Doomsday", "MF DOOM", "Pebbles The Invisible Girl", 4, R.drawable.profile_dummy),
-        TopSong(5, "Self Control", "Frank Ocean", "Blond", 3, R.drawable.profile_dummy),
-        TopSong(6, "Come Through and Chill", "Miguel", "War & Leisure", 2, R.drawable.profile_dummy),
-        TopSong(7, "Golden", "Jill Scott", "The Light of the Sun", 2, R.drawable.profile_dummy),
-        TopSong(8, "Earned It", "The Weeknd", "Fifty Shades of Grey", 1, R.drawable.profile_dummy),
-        TopSong(9, "Pyramids", "Frank Ocean", "Channel Orange", 1, R.drawable.profile_dummy),
-        TopSong(10, "The Hills", "The Weeknd", "Beauty Behind the Madness", 1, R.drawable.profile_dummy)
-    )
+    val analyticsState by viewModel.analyticsState.collectAsState()
+    val currentMonth = YearMonth.now()
+    val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    
+    val topSongs = remember(analyticsState.topSongs) {
+        analyticsState.topSongs.mapIndexed { index, songPlayCount ->
+            TopSong(
+                rank = index + 1,
+                title = songPlayCount.songTitle,
+                artist = songPlayCount.songArtist,
+                albumName = "", // We don't have album info in our analytics
+                plays = songPlayCount.playCount,
+                listeningTimeMinutes = songPlayCount.totalListeningTime / 60,
+                imageId = R.drawable.profile_dummy // Using placeholder image
+            )
+        }
+    }
+    
+    val totalSongsPlayed = analyticsState.totalSongsPlayedThisMonth
 
     Column(
         modifier = modifier
@@ -83,56 +96,87 @@ fun TopSongsScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "April 2025",
+                text = currentMonth.format(monthFormatter),
                 color = Color.Gray,
                 fontSize = 14.sp
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row {
+            if (analyticsState.isLoading) {
+                CircularProgressIndicator(
+                    color = Color(0xFFFFEB3B),
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Row {
+                    Text(
+                        text = "You played ",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 28.sp
+                    )
+                    Text(
+                        text = "$totalSongsPlayed different songs",
+                        color = Color(0xFFFFEB3B),
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 28.sp
+                    )
+                }
                 Text(
-                    text = "You played ",
+                    text = "this month.",
                     color = Color.White,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     lineHeight = 28.sp
                 )
-                Text(
-                    text = "203 different songs",
-                    color = Color(0xFFFFEB3B),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 28.sp
-                )
             }
-            Text(
-                text = "this month.",
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 28.sp
-            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // list songs
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp)
-        ) {
-            itemsIndexed(topSongs) { index, song ->
-                Column {
-                    TopSongItem(
-                        song = song,
-                        modifier = Modifier.padding(vertical = 12.dp)
-                    )
-                    if (index < topSongs.size - 1) {
-                        HorizontalDivider(
-                            color = Color.Gray.copy(alpha = 0.3f),
-                            thickness = 0.5.dp
+        if (analyticsState.isLoading) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFFFFEB3B),
+                    modifier = Modifier.padding(32.dp)
+                )
+            }
+        } else if (topSongs.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No songs played this month",
+                    color = Color.Gray,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(32.dp)
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                itemsIndexed(topSongs) { index, song ->
+                    Column {
+                        TopSongItem(
+                            song = song,
+                            modifier = Modifier.padding(vertical = 12.dp)
                         )
+                        if (index < topSongs.size - 1) {
+                            HorizontalDivider(
+                                color = Color.Gray.copy(alpha = 0.3f),
+                                thickness = 0.5.dp
+                            )
+                        }
                     }
                 }
             }
@@ -198,7 +242,18 @@ fun TopSongItem(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = " plays",
+                    text = " plays • ",
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+                Text(
+                    text = "${song.listeningTimeMinutes}",
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = " min",
                     color = Color.Gray,
                     fontSize = 12.sp
                 )

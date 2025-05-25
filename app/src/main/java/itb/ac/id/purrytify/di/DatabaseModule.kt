@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import itb.ac.id.purrytify.data.local.PurrytifyDatabase
+import itb.ac.id.purrytify.data.local.dao.AnalyticsDao
 import itb.ac.id.purrytify.data.local.dao.SongDao
 import javax.inject.Singleton
 
@@ -27,6 +28,12 @@ object DatabaseModule {
     @Singleton
     fun provideSongDao(database: PurrytifyDatabase): SongDao {
         return database.songDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAnalyticsDao(database: PurrytifyDatabase): AnalyticsDao {
+        return database.analyticsDao()
     }
 
 //    @Provides

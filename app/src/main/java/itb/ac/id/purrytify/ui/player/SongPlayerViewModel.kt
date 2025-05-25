@@ -20,6 +20,7 @@ import itb.ac.id.purrytify.service.NotificationService
 import itb.ac.id.purrytify.ui.navigation.NavigationItem
 import java.util.Locale
 import javax.inject.Inject
+import itb.ac.id.purrytify.data.repository.AnalyticsRepository
 import itb.ac.id.purrytify.data.repository.OnlineSongRepository
 import itb.ac.id.purrytify.utils.*
 import kotlinx.coroutines.*
@@ -29,7 +30,8 @@ import kotlinx.coroutines.flow.*
 class SongPlayerViewModel @Inject constructor(
     private val application: Application,
     private val songDao: SongDao,
-    private val onlineSongRepository: OnlineSongRepository
+    private val onlineSongRepository: OnlineSongRepository,
+    private val analyticsRepository: AnalyticsRepository
 ) : AndroidViewModel(application){
     private val _currentSong = MutableStateFlow<Song?>(null)
     val currentSong: StateFlow<Song?> = _currentSong
@@ -269,6 +271,7 @@ class SongPlayerViewModel @Inject constructor(
 
     private fun playAtIndex(index: Int) {
         if (index < 0 || index >= _songQueue.value.size) return
+        
         val originalSong = _songQueue.value[index]
         val updatedSong = originalSong.copy(lastPlayed = System.currentTimeMillis())
         val newQueue = _songQueue.value.toMutableList()
@@ -287,6 +290,14 @@ class SongPlayerViewModel @Inject constructor(
             if (!updatedSong.isOnline) {
                 songDao.update(updatedSong)
             }
+            
+            val durationSeconds = updatedSong.duration / 1000
+            analyticsRepository.trackSongPlay(
+                songId = updatedSong.songId,
+                songTitle = updatedSong.title,
+                songArtist = updatedSong.artist,
+                songDurationSeconds = durationSeconds
+            )
         }
     }
 
@@ -316,7 +327,6 @@ class SongPlayerViewModel @Inject constructor(
         } else {
             Log.d("SongPlayer", "Cannot toggle play/pause while offline for online song")
             return
-
         }
     }
 
@@ -451,7 +461,6 @@ class SongPlayerViewModel @Inject constructor(
         songPlayer.release()
         _songQueue.value = emptyList()
         _currentSong.value = null
-
         // Unbind dan stop notification service
         stopNotificationService()
     }

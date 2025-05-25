@@ -2,18 +2,15 @@ package itb.ac.id.purrytify.ui.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -23,7 +20,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import itb.ac.id.purrytify.R
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 // buat streak info
 data class StreakData(
@@ -35,7 +36,16 @@ data class StreakData(
 )
 
 @Composable
-fun SoundCapsuleSection(modifier: Modifier = Modifier) {
+fun SoundCapsuleSection(
+    modifier: Modifier = Modifier,
+    onTimeListenedClick: () -> Unit = {},
+    onTopArtistsClick: () -> Unit = {},
+    onTopSongsClick: () -> Unit = {},
+    onExportClick: () -> Unit = {}
+) {
+    val viewModel: SoundCapsuleViewModel = hiltViewModel()
+    val analyticsUiState by viewModel.analyticsState.collectAsState()
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -52,56 +62,103 @@ fun SoundCapsuleSection(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            Icon(
-                imageVector = Icons.Rounded.ArrowDownward,
-                contentDescription = "Download",
-                tint = Color.White,
-                modifier = Modifier.size(24.dp)
-            )
+            IconButton(onClick = onExportClick) {
+                Icon(
+                    imageVector = Icons.Rounded.ArrowDownward,
+                    contentDescription = "Download",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        // dummy April 2025
-        MonthlyCapsule(
-            month = "April 2025",
-            minutesListened = "862",
-            topArtist = "The Beatles",
-            topArtistImageId = R.drawable.profile_dummy,
-            topSong = "Starboy",
-            topSongImageId = R.drawable.profile_dummy,
-            hasStreak = true,
-            streakData = StreakData(
-                days = 5,
-                songName = "Loose",
-                artistName = "Daniel Caesar",
-                albumArtId = R.drawable.profile_dummy,
-                dateRange = "Mar 21-25, 2025"
-            )
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // dummy March 2025 Section
-        MonthlyCapsule(
-            month = "March 2025",
-            minutesListened = "601",
-            topArtist = "Doechii",
-            topArtistImageId = R.drawable.profile_dummy,
-            topSong = "Nights",
-            topSongImageId = R.drawable.profile_dummy
-        )
+        if (analyticsUiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        } else if (analyticsUiState.error != null) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Text(
+                    text = "Unable to load analytics: ${analyticsUiState.error}",
+                    color = Color.Gray,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        } else {
+            // Check apakah empty atau ada data
+            val hasData = analyticsUiState.totalListeningTimeThisMonth > 0 || 
+                         analyticsUiState.topArtists.isNotEmpty() || 
+                         analyticsUiState.topSongs.isNotEmpty()
+            
+            if (hasData) {
+                // show data (jika ada data)
+                val currentMonth = YearMonth.now()
+                val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+                
+                MonthlyCapsule(
+                    month = currentMonth.format(monthFormatter),
+                    minutesListened = analyticsUiState.totalListeningTimeThisMonth / 60,
+                    topArtist = analyticsUiState.topArtists.firstOrNull()?.artist ?: "No data",
+                    topArtistImageId = R.drawable.profile_dummy,
+                    topSong = analyticsUiState.topSongs.firstOrNull()?.songTitle ?: "No data",
+                    topSongImageId = R.drawable.profile_dummy,
+                    hasStreak = analyticsUiState.dayStreaks.isNotEmpty(),
+                    streakData = if (analyticsUiState.dayStreaks.isNotEmpty()) {
+                        val firstStreak = analyticsUiState.dayStreaks.first()
+                        StreakData(
+                            days = firstStreak.streakDays,
+                            songName = firstStreak.songTitle,
+                            artistName = firstStreak.songArtist,
+                            albumArtId = R.drawable.profile_dummy,
+                            dateRange = "${firstStreak.startDate} - ${firstStreak.endDate}"
+                        )
+                    } else null,
+                    onTimeListenedClick = onTimeListenedClick,
+                    onTopArtistsClick = onTopArtistsClick,
+                    onTopSongsClick = onTopSongsClick
+                )
+            } else {
+                // show dummy data jika tidak ada data
+                MonthlyCapsule(
+                    month = "This Month",
+                    minutesListened = 0,
+                    topArtist = "Start listening to music",
+                    topArtistImageId = R.drawable.profile_dummy,
+                    topSong = "No songs played yet",
+                    topSongImageId = R.drawable.profile_dummy,
+                    hasStreak = false,
+                    streakData = null,
+                    onTimeListenedClick = onTimeListenedClick,
+                    onTopArtistsClick = onTopArtistsClick,
+                    onTopSongsClick = onTopSongsClick
+                )
+            }
+        }
     }
 }
 
 @Composable
 fun MonthlyCapsule(
     month: String,
-    minutesListened: String,
+    minutesListened: Long,
     topArtist: String,
     topArtistImageId: Int,
     topSong: String,
     topSongImageId: Int,
     hasStreak: Boolean = false,
-    streakData: StreakData? = null
+    streakData: StreakData? = null,
+    onTimeListenedClick: () -> Unit = {},
+    onTopArtistsClick: () -> Unit = {},
+    onTopSongsClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -126,7 +183,9 @@ fun MonthlyCapsule(
         Spacer(modifier = Modifier.height(8.dp))
 
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onTimeListenedClick() },
             shape = RoundedCornerShape(8.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
@@ -168,7 +227,9 @@ fun MonthlyCapsule(
         ) {
             // top artist
             Card(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onTopArtistsClick() },
                 shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
@@ -214,7 +275,9 @@ fun MonthlyCapsule(
 
             // top song
             Card(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onTopSongsClick() },
                 shape = RoundedCornerShape(8.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {

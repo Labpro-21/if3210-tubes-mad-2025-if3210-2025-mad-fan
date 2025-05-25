@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.local.dao.SongDao
 import itb.ac.id.purrytify.data.local.entity.Song
+import itb.ac.id.purrytify.data.repository.AnalyticsRepository
 import itb.ac.id.purrytify.data.repository.AuthRepository
 import itb.ac.id.purrytify.data.repository.UserRepository
 import itb.ac.id.purrytify.service.TokenCheckService
@@ -41,6 +42,7 @@ data class ProfileUiState(
     val songsCount: Int = 0,
     val likedCount: Int = 0,
     val listenedCount: Int = 0,
+    val currentMonthListeningTime: Long = 0L,
     val isNetworkAvailable: Boolean = true
 )
 
@@ -49,7 +51,9 @@ class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val authRepository: AuthRepository,
     private val songDao: SongDao,
-    ) : ViewModel() {
+    private val analyticsRepository: AnalyticsRepository,
+    private val tokenManager: TokenManager
+) : ViewModel() {
     private val _profileState = MutableStateFlow(ProfileUiState())
     val profileState: StateFlow<ProfileUiState> = _profileState.asStateFlow()
 
@@ -186,6 +190,15 @@ class ProfileViewModel @Inject constructor(
                     }
                 }
 
+                launch {
+                    val currentMonth = analyticsRepository.getCurrentMonthString()
+                    analyticsRepository.getTotalListeningTimeForMonth(currentMonth).collectLatest { listeningTime ->
+                        _profileState.value = _profileState.value.copy(
+                            currentMonthListeningTime = listeningTime
+                        )
+                    }
+                }
+
                 _profileState.value = _profileState.value.copy(
                     isLoading = false,
                     id = profile.id,
@@ -226,6 +239,18 @@ class ProfileViewModel @Inject constructor(
 
     fun resetLogoutState() {
         _logoutState.value = LogoutState.Idle
+    }
+
+    fun exportAnalytics(context: Context) {
+        viewModelScope.launch {
+            try {
+                val soundCapsuleViewModel = SoundCapsuleViewModel(analyticsRepository, tokenManager)
+                val currentMonth = analyticsRepository.getCurrentMonthString()
+                soundCapsuleViewModel.exportAnalyticsToCSV(context, currentMonth)
+            } catch (e: Exception) {
+                Log.e("ProfileViewModel", "Error exporting analytics", e)
+            }
+        }
     }
 }
 

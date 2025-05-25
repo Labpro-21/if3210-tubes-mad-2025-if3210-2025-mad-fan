@@ -132,10 +132,32 @@ fun ProfileContent(
     viewModel: ProfileViewModel = hiltViewModel()
 ) {
     var showEditProfile by remember { mutableStateOf(false) }
+    var currentScreen by remember { mutableStateOf("profile") }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    when (currentScreen) {
+        "timeListened" -> {
+            TimeListenedScreen(
+                onBackClick = { currentScreen = "profile" }
+            )
+            return
+        }
+        "topArtists" -> {
+            TopArtistsScreen(
+                onBackClick = { currentScreen = "profile" }
+            )
+            return
+        }
+        "topSongs" -> {
+            TopSongsScreen(
+                onBackClick = { currentScreen = "profile" }
+            )
+            return
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -190,7 +212,14 @@ fun ProfileContent(
                             .verticalScroll(rememberScrollState())
                             .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
-                        SoundCapsuleSection()
+                        SoundCapsuleSection(
+                            onTimeListenedClick = { currentScreen = "timeListened" },
+                            onTopArtistsClick = { currentScreen = "topArtists" },
+                            onTopSongsClick = { currentScreen = "topSongs" },
+                            onExportClick = {
+                                viewModel.exportAnalytics(context)
+                            }
+                        )
                         Spacer(modifier = Modifier.height(80.dp))
                     }
                 }
@@ -210,7 +239,14 @@ fun ProfileContent(
                         isLandscapeProfile = false
                     )
                     Spacer(modifier = Modifier.height(32.dp))
-                    SoundCapsuleSection()
+                    SoundCapsuleSection(
+                        onTimeListenedClick = { currentScreen = "timeListened" },
+                        onTopArtistsClick = { currentScreen = "topArtists" },
+                        onTopSongsClick = { currentScreen = "topSongs" },
+                        onExportClick = {
+                            viewModel.exportAnalytics(context)
+                        }
+                    )
                     Spacer(modifier = Modifier.height(80.dp))
                 }
             }

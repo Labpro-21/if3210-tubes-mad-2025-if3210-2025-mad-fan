@@ -42,22 +42,39 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.data.local.entity.Song
 import itb.ac.id.purrytify.ui.player.SongPlayerViewModel
+import itb.ac.id.purrytify.ui.onlinesong.OnlineSongViewModel
+
+fun getCountryName(countryCode: String): String {
+    val countryMap = mapOf(
+        "ID" to "Indonesia",
+        "MY" to "Malaysia",
+        "US" to "United States",
+        "GB" to "United Kingdom",
+        "CH" to "Switzerland",
+        "DE" to "Germany",
+        "BR" to "Brazil"
+    )
+    return countryMap[countryCode.uppercase()] ?: "Country"
+}
 
 @Composable
 fun HomeFragment(
     viewModel: HomeViewModel = hiltViewModel(),
     songPlayerViewModel: SongPlayerViewModel,
+    onlineSongViewModel: OnlineSongViewModel = hiltViewModel(),
     onPlay: () -> Unit,
     onOnlineSong: (path: String?) -> Unit
 ) {
     val newSongs by viewModel.newSongs.collectAsState()
     val recentlyPlayed by viewModel.recentlyPlayed.collectAsState()
+    val userLocation by onlineSongViewModel.location.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        HomeContent(newSongs, recentlyPlayed, songPlayerViewModel, onPlay, onOnlineSong)
+        HomeContent(newSongs, recentlyPlayed, songPlayerViewModel, userLocation = userLocation, onPlay, onOnlineSong)
     }
 }
 
@@ -66,10 +83,12 @@ fun HomeContent(
     newSongsData: List<Song>,
     recentlyPlayedData: List<Song>,
     songPlayerViewModel: SongPlayerViewModel,
+    userLocation: String,
     onPlay: () -> Unit,
     onOnlineSong: (path: String?) -> Unit
 ) {
     val context = LocalContext.current
+    val currentCountry = if (userLocation.isNotEmpty()) getCountryName(userLocation) else "Country"
 
     Column(
         modifier = Modifier
@@ -139,7 +158,7 @@ fun HomeContent(
             ) {
                 OnlineCover(
                     title = "Top 10",
-                    subtitle = "Indonesia",
+                    subtitle = currentCountry,
                     gradientType = "country",
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -149,7 +168,7 @@ fun HomeContent(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "Indonesia",
+                    text = currentCountry,
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,

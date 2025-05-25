@@ -109,15 +109,13 @@ fun SoundCapsuleSection(
                 )
             }
         } else {
-            // Display all available monthly capsules
+            // Display capsule setiap bulan
             val monthlyDisplayData = uiState.monthlyDisplayData
             
-            // Add debug logging
             Log.d("SoundCapsule", "Monthly display data size: ${monthlyDisplayData.size}")
             Log.d("SoundCapsule", "Monthly history size: ${uiState.monthlyHistory.size}")
             
             if (monthlyDisplayData.isNotEmpty()) {
-                // Show all monthly capsules, sorted by month descending (newest first)
                 val sortedData = monthlyDisplayData.sortedByDescending { it.month }
                 
                 sortedData.forEach { monthlyData ->
@@ -140,7 +138,7 @@ fun SoundCapsuleSection(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             } else {
-                // Show message when no data is available
+                // no data
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)

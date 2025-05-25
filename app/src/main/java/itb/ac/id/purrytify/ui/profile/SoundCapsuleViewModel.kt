@@ -86,7 +86,6 @@ class SoundCapsuleViewModel @Inject constructor(
                 val currentMonth = analyticsRepository.getCurrentMonthString()
                 _uiState.value = _uiState.value.copy(currentMonth = currentMonth)
                 
-                // Combine multiple flows for real-time updates
                 combine(
                     analyticsRepository.getTotalListeningTimeForMonth(currentMonth),
                     analyticsRepository.getTopArtistsForMonth(currentMonth, 1),
@@ -133,7 +132,6 @@ class SoundCapsuleViewModel @Inject constructor(
         viewModelScope.launch {
             analyticsRepository.getAllMonthlyAnalytics().collectLatest { monthlyHistory ->
                 _uiState.value = _uiState.value.copy(monthlyHistory = monthlyHistory)
-                // Reload enhanced data when monthly history changes
                 loadEnhancedMonthlyDataFromHistory(monthlyHistory)
             }
         }
@@ -223,7 +221,7 @@ class SoundCapsuleViewModel @Inject constructor(
                 MonthlyDisplayData(
                     month = monthlyAnalytics.month,
                     displayMonth = displayMonth,
-                    minutesListened = monthlyAnalytics.totalListeningTime / 60000, // Convert milliseconds to minutes
+                    minutesListened = monthlyAnalytics.totalListeningTime / 60000,
                     topArtist = topArtist?.artist ?: "No data",
                     topArtistImageId = topArtist?.imagePath,
                     topSong = topSong?.songTitle ?: "No data",

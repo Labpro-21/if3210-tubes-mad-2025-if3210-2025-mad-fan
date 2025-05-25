@@ -1,5 +1,6 @@
 package itb.ac.id.purrytify.ui
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -31,13 +32,19 @@ import android.content.res.Configuration
 
 @AndroidEntryPoint
 class MainActivity: AppCompatActivity() {
+    private var deepLinkState by mutableStateOf<Uri?>(null)
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        deepLinkState = intent?.data
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge() // Biar aplikasi penuh sampe ke status bar
         super.onCreate(savedInstanceState)
-        val deepLink = intent?.data
+        deepLinkState = intent?.data
+        Log.d("MainActivity", "Deep link received: $deepLinkState")
         setContent {
             PurrytifyTheme {
-                PurrytifyApp(deepLink)
+                PurrytifyApp(deepLinkState)
             }
         }
     }

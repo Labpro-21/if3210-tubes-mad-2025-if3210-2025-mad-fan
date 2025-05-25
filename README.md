@@ -77,7 +77,7 @@ The recommendation engine has been upgraded with Top Mixes feature, delivering p
 ### Screenshots (Milestone 2)
 1. Online Songs: Top Charts, Country Charts
 <div align="center">
-  <img src="screenshot/milestone2/onlinesong.png" alt="online" width="29%"/>
+  <img src="screenshot/milestone2/home3.png" alt="online" width="29%"/>
   <img src="screenshot/milestone2/top50global.png" alt="Top 50 Global" width="29%"/>
   <img src="screenshot/milestone2/top10country.png" alt="Top 10 Country" width="29%"/>
 </div>
@@ -183,7 +183,7 @@ Project is complete with advanced features
 ### Work Hours (Milestone 2)
 | **NIM**  |           **Nama**            | **Work Hours**    |
 | :------: | :---------------------------: | ----------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |        79         |
+| 13522020 | Aurelius Justin Philo Fanjaya |        74         |
 | 13522074 |    Muhammad Naufal Aulia      |                 |
 | 13522090 |        Fedrianz Dharma        |      50          |
 

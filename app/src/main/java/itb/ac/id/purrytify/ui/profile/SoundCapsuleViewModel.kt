@@ -98,7 +98,7 @@ class SoundCapsuleViewModel @Inject constructor(
                     val dailyAverage = if (dailyStats.isNotEmpty()) {
                         totalTime / dailyStats.size
                     } else 0L
-                    
+
                     SoundCapsuleUiState(
                         isLoading = false,
                         currentMonth = currentMonth,

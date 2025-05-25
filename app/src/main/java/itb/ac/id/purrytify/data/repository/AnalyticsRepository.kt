@@ -6,6 +6,8 @@ import itb.ac.id.purrytify.data.local.dao.AnalyticsDao
 import itb.ac.id.purrytify.data.local.entity.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.*
@@ -35,6 +37,9 @@ class AnalyticsRepository @Inject constructor(
         // Update daily listening
         updateDailyListening(today, songDurationSeconds)
         
+        // Update daily song play tracking (new)
+        updateDailySongPlay(songId, songTitle, songArtist, today, songDurationSeconds)
+        
         // Update song play count
         updateSongPlayCount(songId, songTitle, songArtist, month, songDurationSeconds)
         
@@ -63,6 +68,33 @@ class AnalyticsRepository @Inject constructor(
                 songsPlayed = 1
             )
             analyticsDao.insertDailyListening(newDaily)
+        }
+    }
+    
+    private suspend fun updateDailySongPlay(songId: Int, songTitle: String, songArtist: String, date: String, durationSeconds: Long) {
+        val userID = requireUserID()
+        
+        val existing = analyticsDao.getDailySongPlay(userID, songId, date)
+        if (existing != null) {
+            val updated = existing.copy(
+                playCount = existing.playCount + 1,
+                totalListeningTime = existing.totalListeningTime + durationSeconds,
+                lastPlayAt = System.currentTimeMillis()
+            )
+            analyticsDao.insertDailySongPlay(updated)
+        } else {
+            val newDailySongPlay = DailySongPlay(
+                userID = userID,
+                songId = songId,
+                songTitle = songTitle,
+                songArtist = songArtist,
+                date = date,
+                playCount = 1,
+                totalListeningTime = durationSeconds,
+                firstPlayAt = System.currentTimeMillis(),
+                lastPlayAt = System.currentTimeMillis()
+            )
+            analyticsDao.insertDailySongPlay(newDailySongPlay)
         }
     }
     
@@ -175,7 +207,73 @@ class AnalyticsRepository @Inject constructor(
     
     fun getDayStreaksForMonth(month: String): Flow<List<DayStreak>> {
         val userID = runBlocking { tokenManager.getCurrentUserID() }
-        return analyticsDao.getDayStreaksForMonth(userID, month)
+        val monthPattern = "$month%"
+        return analyticsDao.getSongPlayDatesForMonth(userID, monthPattern)
+            .map { songPlayDates ->
+                calculateStreaks(songPlayDates)
+            }
+    }
+    
+    private fun calculateStreaks(songPlayDates: List<DailySongPlay>): List<DayStreak> {
+        val longestStreaks = mutableListOf<DayStreak>()
+        
+        // Group by song
+        val songGroups = songPlayDates.groupBy { Triple(it.songId, it.songTitle, it.songArtist) }
+        
+        for ((songInfo, plays) in songGroups) {
+            val (songId, songTitle, songArtist) = songInfo
+            val sortedDates = plays.map { it.date }.sorted().distinct() // Remove duplicates and sort
+            
+            if (sortedDates.size < 2) continue
+            
+            var currentStreakStart = sortedDates[0]
+            var currentStreakEnd = sortedDates[0]
+            var currentStreakDays = 1
+            var longestStreakDays = 1
+            var longestStreakStart = sortedDates[0]
+            var longestStreakEnd = sortedDates[0]
+            
+            for (i in 1 until sortedDates.size) {
+                val currentDate = sortedDates[i]
+                val previousDate = sortedDates[i - 1]
+                
+                // Check if consecutive days (parse dates and check difference)
+                val currentParsed = java.time.LocalDate.parse(currentDate)
+                val previousParsed = java.time.LocalDate.parse(previousDate)
+                
+                if (currentParsed.isEqual(previousParsed.plusDays(1))) {
+                    // Consecutive day - extend current streak
+                    currentStreakEnd = currentDate
+                    currentStreakDays += 1
+                } else {
+                    // Start new streak
+                    currentStreakStart = currentDate
+                    currentStreakEnd = currentDate
+                    currentStreakDays = 1
+                }
+
+                if (currentStreakDays > longestStreakDays) {
+                    longestStreakDays = currentStreakDays
+                    longestStreakStart = currentStreakStart
+                    longestStreakEnd = currentStreakEnd
+                }
+            }
+            
+            // Only add if the longest streak is 2+ days
+            if (longestStreakDays >= 2) {
+                longestStreaks.add(
+                    DayStreak(
+                        songTitle = songTitle,
+                        songArtist = songArtist,
+                        streakDays = longestStreakDays,
+                        startDate = longestStreakStart,
+                        endDate = longestStreakEnd
+                    )
+                )
+            }
+        }
+        
+        return longestStreaks.sortedByDescending { it.streakDays }
     }
     
     fun getDailyStatsForMonth(month: String): Flow<List<DailyStats>> {

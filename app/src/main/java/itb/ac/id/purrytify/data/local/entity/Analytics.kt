@@ -75,6 +75,28 @@ data class ArtistPlayCount(
     val lastPlayed: Long = System.currentTimeMillis()
 )
 
+@Entity(
+    tableName = "daily_song_plays",
+    indices = [
+        Index(value = ["userID", "songId", "date"], unique = true),
+        Index(value = ["userID", "date"]),
+        Index(value = ["userID", "songId"])
+    ]
+)
+data class DailySongPlay(
+    @PrimaryKey(autoGenerate = true)
+    val dailySongPlayId: Int = 0,
+    val userID: Int,
+    val songId: Int,
+    val songTitle: String,
+    val songArtist: String,
+    val date: String, // Format: "2025-05-25"
+    val playCount: Int = 0,
+    val totalListeningTime: Long = 0L, // Total listening time in seconds for this song on this day
+    val firstPlayAt: Long = System.currentTimeMillis(),
+    val lastPlayAt: Long = System.currentTimeMillis()
+)
+
 // Data classes for aggregated analytics
 data class MonthlyStats(
     val month: String,

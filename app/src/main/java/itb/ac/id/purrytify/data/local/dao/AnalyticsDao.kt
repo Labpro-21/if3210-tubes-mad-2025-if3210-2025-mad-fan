@@ -46,6 +46,16 @@ interface AnalyticsDao {
     @Query("SELECT * FROM artist_play_count WHERE userID = :userID AND month = :month ORDER BY playCount DESC LIMIT :limit")
     fun getTopArtistsForMonth(userID: Int, month: String, limit: Int = 10): Flow<List<ArtistPlayCount>>
     
+    // Daily Song Play operations
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDailySongPlay(dailySongPlay: DailySongPlay)
+    
+    @Query("SELECT * FROM daily_song_plays WHERE userID = :userID AND songId = :songId AND date = :date")
+    suspend fun getDailySongPlay(userID: Int, songId: Int, date: String): DailySongPlay?
+    
+    @Query("SELECT * FROM daily_song_plays WHERE userID = :userID AND date LIKE :monthPattern ORDER BY date ASC")
+    fun getDailySongPlaysForMonth(userID: Int, monthPattern: String): Flow<List<DailySongPlay>>
+    
     // Monthly Analytics operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMonthlyAnalytics(monthlyAnalytics: MonthlyAnalytics)
@@ -57,21 +67,12 @@ interface AnalyticsDao {
     fun getAllMonthlyAnalytics(userID: Int): Flow<List<MonthlyAnalytics>>
     
     @Query("""
-        SELECT songTitle, songArtist, 
-               COUNT(DISTINCT date) as streakDays,
-               MIN(date) as startDate,
-               MAX(date) as endDate
-        FROM (
-            SELECT DISTINCT s.songTitle, s.songArtist, d.date
-            FROM song_play_count s
-            JOIN daily_listening d ON d.userID = s.userID AND substr(d.date, 1, 7) = s.month
-            WHERE s.userID = :userID AND s.month = :month AND s.playCount > 0
-        )
-        GROUP BY songTitle, songArtist
-        HAVING streakDays >= 2
-        ORDER BY streakDays DESC
+        SELECT *
+        FROM daily_song_plays 
+        WHERE userID = :userID AND date LIKE :monthPattern
+        ORDER BY songId, date ASC
     """)
-    fun getDayStreaksForMonth(userID: Int, month: String): Flow<List<DayStreak>>
+    fun getSongPlayDatesForMonth(userID: Int, monthPattern: String): Flow<List<DailySongPlay>>
     
     // Daily Stats
     @Query("""
@@ -93,6 +94,9 @@ interface AnalyticsDao {
     
     @Query("DELETE FROM artist_play_count WHERE month < :cutoffMonth")
     suspend fun cleanupOldArtistPlayCounts(cutoffMonth: String)
+    
+    @Query("DELETE FROM daily_song_plays WHERE date < :cutoffDate")
+    suspend fun cleanupOldDailySongPlays(cutoffDate: String)
     
     @Query("DELETE FROM monthly_analytics WHERE month < :cutoffMonth")
     suspend fun cleanupOldMonthlyAnalytics(cutoffMonth: String)

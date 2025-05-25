@@ -308,7 +308,6 @@ class SongPlayerViewModel @Inject constructor(
 
         // Update notification
         notificationService?.updateCurrentSong(updatedSong)
-
         viewModelScope.launch {
             if (!updatedSong.isOnline) {
                 songDao.update(updatedSong)

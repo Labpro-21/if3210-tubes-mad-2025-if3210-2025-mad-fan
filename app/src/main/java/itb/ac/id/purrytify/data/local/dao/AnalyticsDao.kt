@@ -52,12 +52,12 @@ interface AnalyticsDao {
     
     @Query("""
         SELECT apc.*, 
-               (SELECT s.imagePath 
+               COALESCE((SELECT s.imagePath 
                 FROM song s 
                 LEFT JOIN song_play_count spc2 ON s.songId = spc2.songId AND s.userID = spc2.userID 
                 WHERE s.artist = apc.artist AND s.userID = apc.userID AND spc2.month = apc.month
                 ORDER BY spc2.playCount DESC 
-                LIMIT 1) as imagePath
+                LIMIT 1), '') as imagePath
         FROM artist_play_count apc 
         WHERE apc.userID = :userID AND apc.month = :month 
         ORDER BY apc.playCount DESC 

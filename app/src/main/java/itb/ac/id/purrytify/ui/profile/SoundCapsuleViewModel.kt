@@ -48,6 +48,7 @@ data class SoundCapsuleUiState(
     val dayStreaks: List<DayStreak> = emptyList(),
     val dailyStats: List<DailyStats> = emptyList(),
     val monthlyHistory: List<MonthlyAnalytics> = emptyList(),
+    val monthlyDisplayData: List<MonthlyDisplayData> = emptyList(),
     val error: String? = null
 )
 
@@ -74,6 +75,7 @@ class SoundCapsuleViewModel @Inject constructor(
         loadCurrentMonthAnalytics()
         loadAllAnalytics()
         loadDetailedAnalytics()
+        loadEnhancedMonthlyData()
     }
     
     private fun loadCurrentMonthAnalytics() {
@@ -131,6 +133,8 @@ class SoundCapsuleViewModel @Inject constructor(
         viewModelScope.launch {
             analyticsRepository.getAllMonthlyAnalytics().collectLatest { monthlyHistory ->
                 _uiState.value = _uiState.value.copy(monthlyHistory = monthlyHistory)
+                // Reload enhanced data when monthly history changes
+                loadEnhancedMonthlyDataFromHistory(monthlyHistory)
             }
         }
     }
@@ -185,6 +189,66 @@ class SoundCapsuleViewModel @Inject constructor(
         }
     }
     
+    private fun loadEnhancedMonthlyData() {
+        viewModelScope.launch {
+            try {
+                val monthlyHistory = analyticsRepository.getAllMonthlyAnalytics().first()
+                loadEnhancedMonthlyDataFromHistory(monthlyHistory)
+            } catch (e: Exception) {
+                Log.e("SoundCapsuleViewModel", "Error loading enhanced monthly data", e)
+            }
+        }
+    }
+
+    private suspend fun loadEnhancedMonthlyDataFromHistory(monthlyHistory: List<MonthlyAnalytics>) {
+        try {
+            Log.d("SoundCapsuleViewModel", "Loading enhanced data for ${monthlyHistory.size} months")
+            
+            val enhancedData = monthlyHistory.map { monthlyAnalytics ->
+                Log.d("SoundCapsuleViewModel", "Processing month: ${monthlyAnalytics.month}, totalTime: ${monthlyAnalytics.totalListeningTime}")
+                
+                // Load detailed data for each month
+                val topArtists = analyticsRepository.getTopArtistsForMonth(monthlyAnalytics.month, 1).first()
+                val topSongs = analyticsRepository.getTopSongsForMonth(monthlyAnalytics.month, 1).first()
+                val dayStreaks = analyticsRepository.getDayStreaksForMonth(monthlyAnalytics.month).first()
+                
+                Log.d("SoundCapsuleViewModel", "Month ${monthlyAnalytics.month}: artists=${topArtists.size}, songs=${topSongs.size}, streaks=${dayStreaks.size}")
+                
+                val topArtist = topArtists.firstOrNull()
+                val topSong = topSongs.firstOrNull()
+                val longestStreak = dayStreaks.maxByOrNull { it.streakDays }
+                
+                val displayMonth = formatDisplayMonth(monthlyAnalytics.month)
+                
+                MonthlyDisplayData(
+                    month = monthlyAnalytics.month,
+                    displayMonth = displayMonth,
+                    minutesListened = monthlyAnalytics.totalListeningTime / 60000, // Convert milliseconds to minutes
+                    topArtist = topArtist?.artist ?: "No data",
+                    topArtistImageId = topArtist?.imagePath,
+                    topSong = topSong?.songTitle ?: "No data",
+                    topSongImageId = topSong?.imagePath,
+                    hasStreak = longestStreak != null && longestStreak.streakDays > 1,
+                    streakData = longestStreak?.let { streak ->
+                        StreakData(
+                            days = streak.streakDays,
+                            songName = streak.songTitle,
+                            artistName = streak.songArtist,
+                            imageId = streak.imagePath,
+                            dateRange = "${streak.startDate} - ${streak.endDate}"
+                        )
+                    }
+                )
+            }
+            
+            Log.d("SoundCapsuleViewModel", "Setting ${enhancedData.size} enhanced monthly data items")
+            _uiState.value = _uiState.value.copy(monthlyDisplayData = enhancedData)
+            
+        } catch (e: Exception) {
+            Log.e("SoundCapsuleViewModel", "Error loading enhanced monthly data from history", e)
+        }
+    }
+
     fun getAnalyticsForMonth(month: String): Flow<SoundCapsuleUiState> {
         return combine(
             analyticsRepository.getTotalListeningTimeForMonth(month),
@@ -333,5 +397,54 @@ class SoundCapsuleViewModel @Inject constructor(
     fun refreshAnalytics() {
         loadCurrentMonthAnalytics()
         loadAllAnalytics()
+        loadEnhancedMonthlyData()
+    }
+    
+    fun loadAnalyticsForMonth(month: String) {
+        viewModelScope.launch {
+            try {
+                _analyticsState.value = _analyticsState.value.copy(isLoading = true)
+                
+                combine(
+                    analyticsRepository.getTotalListeningTimeForMonth(month),
+                    analyticsRepository.getTopArtistsForMonth(month, 10),
+                    analyticsRepository.getTopSongsForMonth(month, 10),
+                    analyticsRepository.getDailyStatsForMonth(month),
+                    analyticsRepository.getDayStreaksForMonth(month)
+                ) { totalTime, topArtists, topSongs, dailyStats, dayStreaks ->
+                    
+                    // Convert daily stats to daily listening
+                    val dailyListening = dailyStats.map { stat ->
+                        DailyListening(
+                            userID = tokenManager.getCurrentUserID(),
+                            date = stat.date,
+                            listeningTimeSeconds = stat.totalTimeSeconds,
+                        )
+                    }
+                    
+                    // Count unique songs played this month
+                    val totalSongsPlayed = topSongs.size
+                    
+                    AnalyticsUiState(
+                        isLoading = false,
+                        totalListeningTimeThisMonth = totalTime,
+                        totalSongsPlayedThisMonth = totalSongsPlayed,
+                        topArtists = topArtists,
+                        topSongs = topSongs,
+                        dailyListening = dailyListening,
+                        dayStreaks = dayStreaks
+                    )
+                }.collectLatest { newState ->
+                    _analyticsState.value = newState
+                }
+                
+            } catch (e: Exception) {
+                Log.e("SoundCapsuleViewModel", "Error loading analytics for month $month", e)
+                _analyticsState.value = _analyticsState.value.copy(
+                    isLoading = false,
+                    error = "Failed to load analytics: ${e.message}"
+                )
+            }
+        }
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
@@ -44,7 +45,8 @@ import itb.ac.id.purrytify.utils.CountryUtils
 fun LocationSelectionDialog(
     onDismiss: () -> Unit,
     onLocationSelected: (itb.ac.id.purrytify.utils.Country) -> Unit,
-    onAutoDetect: () -> Unit
+    onAutoDetect: () -> Unit,
+    onManualSelect: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
@@ -158,7 +160,28 @@ fun LocationSelectionDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+                Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
 
+                // map
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onManualSelect() }
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Map,
+                        contentDescription = "Select on Map",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Select Location on Map",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
                 Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
 
                 // List country

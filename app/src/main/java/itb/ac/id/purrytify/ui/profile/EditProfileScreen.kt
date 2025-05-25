@@ -13,8 +13,10 @@ import itb.ac.id.purrytify.R
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.app.ActivityCompat
+import android.app.Activity
 
 import android.location.Geocoder
 import com.google.android.gms.location.LocationCallback
@@ -110,6 +112,21 @@ fun EditProfileScreen(
             selectedImageUri = photoUri
         } else {
             Toast.makeText(context, "Failed to capture image", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val mapLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                val countryCode = data.getStringExtra("country_code")
+                val countryName = data.getStringExtra("country_name")
+                if (countryCode != null && countryName != null) {
+                    selectedCountryCode = countryCode
+                    selectedCountryName = countryName
+                }
+            }
         }
     }
 
@@ -270,6 +287,11 @@ fun EditProfileScreen(
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     )
                 )
+                showLocationDialog = false
+            },
+            onManualSelect = {
+                val intent = Intent(context, MapActivity::class.java)
+                mapLauncher.launch(intent)
                 showLocationDialog = false
             }
         )

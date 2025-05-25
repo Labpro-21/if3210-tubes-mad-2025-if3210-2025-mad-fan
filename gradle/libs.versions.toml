@@ -4,6 +4,7 @@ core = "3.5.2"
 fragmentKtx = "1.8.6"
 glide = "4.16.0"
 javaJwt = "4.4.0"
+json = "20230227"
 kotlin = "2.0.0"
 composeBomVersion = "2025.03.01"
 appcompatResources = "1.7.0"
@@ -28,6 +29,7 @@ media = "1.7.0"
 mediaVersion = "1.7.0"
 navigationCompose = "2.8.9"
 okhttp = "4.11.0"
+osmdroidAndroid = "6.1.17"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.2.0"
 retrofit = "2.9.0"
@@ -84,12 +86,14 @@ hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltA
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltAndroid" }
 hilt-ext-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 java-jwt = { module = "com.auth0:java-jwt", version.ref = "javaJwt" }
+json = { module = "org.json:json", version.ref = "json" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutinesAndroid" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
 play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }

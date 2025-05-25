@@ -23,6 +23,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import android.os.Looper
 import android.util.Log
+import androidx.compose.ui.platform.LocalConfiguration
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,6 +71,7 @@ import androidx.compose.ui.window.DialogProperties
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.transform.CircleCropTransformation
@@ -91,6 +93,8 @@ fun EditProfileScreen(
     var showLocationDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val editProfileState by viewModel.editProfileState.collectAsState()
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -105,7 +109,6 @@ fun EditProfileScreen(
         if (success && photoUri != null) {
             selectedImageUri = photoUri
         } else {
-            // Gagal
             Toast.makeText(context, "Failed to capture image", Toast.LENGTH_SHORT).show()
         }
     }
@@ -280,7 +283,7 @@ fun EditProfileScreen(
                 onDismiss()
             }
             is EditProfileState.Error -> {
-//               log
+//                log
                 Log.d("EditProfileState", "Error: ${(editProfileState as EditProfileState.Error).message}")
                 Toast.makeText(
                     context,
@@ -293,7 +296,218 @@ fun EditProfileScreen(
         }
     }
 
-    // Popup edit profile
+    @Composable
+    fun ProfilePhotoSection(modifier: Modifier = Modifier) {
+        Column(
+            modifier = modifier,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(if (isLandscape) 120.dp else 150.dp)
+                    .clip(CircleShape)
+                    .background(Color.LightGray),
+                contentAlignment = Alignment.Center
+            ) {
+                when {
+                    selectedImageUri != null -> {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(selectedImageUri)
+                                    .crossfade(true)
+                                    .transformations(CircleCropTransformation())
+                                    .build()
+                            ),
+                            contentDescription = "Selected Profile Photo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    profileState.profilePhoto != null -> {
+                        val imageUrl = "http://34.101.226.132:3000/uploads/profile-picture/${profileState.profilePhoto}"
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(imageUrl)
+                                    .crossfade(true)
+                                    .transformations(CircleCropTransformation())
+                                    .error(R.drawable.profile_dummy)
+                                    .placeholder(R.drawable.profile_dummy)
+                                    .build()
+                            ),
+                            contentDescription = "Profile Photo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                    else -> {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = "Profile Photo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(if (isLandscape) 16.dp else 24.dp))
+
+            Text(
+                text = "Profile Photo",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            // landscape
+            if (isLandscape) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { galleryLauncher.launch("image/*") },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoLibrary,
+                                contentDescription = "Open Gallery"
+                            )
+                            Text("Gallery")
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = "Open Camera"
+                            )
+                            Text("Camera")
+                        }
+                    }
+                }
+            } else {
+                // portrait awal
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = { galleryLauncher.launch("image/*") },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoLibrary,
+                                contentDescription = "Open Gallery"
+                            )
+                            Text("Open Gallery")
+                        }
+                    }
+
+                    Button(
+                        onClick = {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = "Open Camera"
+                            )
+                            Text("Open Camera")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun LocationSection(modifier: Modifier = Modifier) {
+        Column(modifier = modifier) {
+            Text(
+                text = "Location",
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextField(
+                    value = selectedCountryName,
+                    onValueChange = {},
+                    readOnly = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
+                )
+                IconButton(
+                    onClick = { showLocationDialog = true },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Location",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+    }
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(
@@ -333,173 +547,43 @@ fun EditProfileScreen(
                     }
                 }
 
-                // Photo section
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(150.dp)
-                            .clip(CircleShape)
-                            .background(Color.LightGray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        when {
-                            selectedImageUri != null -> {
-                                Image(
-                                    painter = rememberAsyncImagePainter(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(selectedImageUri)
-                                            .crossfade(true)
-                                            .transformations(CircleCropTransformation())
-                                            .build()
-                                    ),
-                                    contentDescription = "Selected Profile Photo",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            profileState.profilePhoto != null -> {
-                                val imageUrl = "http://34.101.226.132:3000/uploads/profile-picture/${profileState.profilePhoto}"
-                                Image(
-                                    painter = rememberAsyncImagePainter(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(imageUrl)
-                                            .crossfade(true)
-                                            .transformations(CircleCropTransformation())
-                                            .error(R.drawable.profile_dummy)
-                                            .placeholder(R.drawable.profile_dummy)
-                                            .build()
-                                    ),
-                                    contentDescription = "Profile Photo",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                            else -> {
-                                Image(
-                                    painter = painterResource(id = R.drawable.profile_dummy),
-                                    contentDescription = "Profile Photo",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(40.dp))
-
-                    Text(
-                        text = "Profile Photo",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
+                // edit content landscape
+                if (isLandscape) {
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            .weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp)
                     ) {
-                        // Open Gallery
-                        Button(
-                            onClick = { galleryLauncher.launch("image/*") },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = RoundedCornerShape(24.dp),
-                            modifier = Modifier.weight(1f)
+                        ProfilePhotoSection(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(vertical = 8.dp)
+                        )
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(vertical = 8.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PhotoLibrary,
-                                    contentDescription = "Open Gallery"
-                                )
-                                Text("Open Gallery")
-                            }
-                        }
-
-                        // Open Camera
-                        Button(
-                            onClick = {
-                                cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
-                            ),
-                            shape = RoundedCornerShape(24.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PhotoCamera,
-                                    contentDescription = "Open Camera"
-                                )
-                                Text("Open Camera")
-                            }
+                            LocationSection(modifier = Modifier.fillMaxWidth())
                         }
                     }
+                } else {
+                    // edit content portrait
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .padding(vertical = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        ProfilePhotoSection(modifier = Modifier.fillMaxWidth())
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
 
-                    // Location
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "Location",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            TextField(
-                                value = selectedCountryName,
-                                onValueChange = {},
-                                readOnly = true,
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                                    disabledContainerColor = MaterialTheme.colorScheme.surface,
-                                    focusedTextColor = Color.White,
-                                    unfocusedTextColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp)
-                            )
-
-                            // Edit location
-                            IconButton(
-                                onClick = { showLocationDialog = true },
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Edit,
-                                    contentDescription = "Edit Location",
-                                    tint = Color.White
-                                )
-                            }
-                        }
+                        LocationSection(modifier = Modifier.fillMaxWidth())
                     }
                 }
-
-                Spacer(modifier = Modifier.weight(1f))
 
                 // Save
                 Button(
@@ -510,9 +594,16 @@ fun EditProfileScreen(
                             context = context
                         )
                     },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
+                    modifier = if (isLandscape) {
+                        Modifier
+                            .width(200.dp)
+                            .height(44.dp)
+                            .align(Alignment.End)
+                    } else {
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp)
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary

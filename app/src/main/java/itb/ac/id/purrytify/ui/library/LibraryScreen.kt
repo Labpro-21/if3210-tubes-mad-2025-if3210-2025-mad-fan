@@ -45,7 +45,7 @@ fun LibraryScreen(songPlayerViewModel: SongPlayerViewModel, onPlay: () -> Unit, 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                    .padding(PaddingValues(top = 16.dp, start = 16.dp, end = 16.dp)),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {

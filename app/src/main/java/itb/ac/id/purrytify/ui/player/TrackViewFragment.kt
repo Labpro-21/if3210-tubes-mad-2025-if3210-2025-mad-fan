@@ -65,6 +65,13 @@ fun TrackViewFragment(
         }
     }
 
+    // Refresh audio devices when showing dialog
+    LaunchedEffect(showAudioDeviceDialog) {
+        if (showAudioDeviceDialog) {
+            viewModel.getCurrentAudioDevice()
+        }
+    }
+
     val context = LocalContext.current
     var showSheetQR by remember { mutableStateOf(false) }
 

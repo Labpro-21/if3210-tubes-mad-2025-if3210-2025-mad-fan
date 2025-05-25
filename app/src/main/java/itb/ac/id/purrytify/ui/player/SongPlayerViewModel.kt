@@ -198,8 +198,24 @@ class SongPlayerViewModel @Inject constructor(
         startUpdatingPosition()
         bindNotificationService()
         
-        // inisialisasi audio device 
+        // Initialize audio device management
         audioDeviceManager = AudioDeviceManager(application)
+        
+        // Initial detection of current audio device
+        viewModelScope.launch {
+            getCurrentAudioDevice()
+            // Also start a periodic check to detect audio device changes
+            startAudioDeviceMonitoring()
+        }
+    }
+    
+    private fun startAudioDeviceMonitoring() {
+        viewModelScope.launch {
+            while (true) {
+                delay(5000) // Check every 5 seconds
+                getCurrentAudioDevice()
+            }
+        }
     }
 
     @OptIn(FlowPreview::class)
@@ -544,15 +560,26 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun setAudioDevice(device: AudioDevice) {
-        val success = audioDeviceManager.setAudioDevice(device)
-        if (success) {
-            viewModelScope.launch {
-                delay(300)
+        viewModelScope.launch(Dispatchers.IO) {
+            val success = audioDeviceManager.forceAudioRouting(device)
+            if (success) {
+                delay(500) // Increased delay to ensure changes take effect
                 getCurrentAudioDevice()
+                Log.d("SongPlayerViewModel", "Audio device set to: ${device.name}")
+            } else {
+                Log.e("SongPlayerViewModel", "Failed to set audio device: ${device.name}")
+                // Try again with more aggressive approach
+                viewModelScope.launch {
+                    try {
+                        val forceSuccess = audioDeviceManager.forceAudioRouting(device)
+                        delay(500)
+                        getCurrentAudioDevice()
+                        Log.d("SongPlayerViewModel", "Force set audio device result: $forceSuccess")
+                    } catch (e: Exception) {
+                        Log.e("SongPlayerViewModel", "Error in force audio routing: ${e.message}")
+                    }
+                }
             }
-            Log.d("SongPlayerViewModel", "Audio device set to: ${device.name}")
-        } else {
-            Log.e("SongPlayerViewModel", "Failed to set audio device: ${device.name}")
         }
     }
 

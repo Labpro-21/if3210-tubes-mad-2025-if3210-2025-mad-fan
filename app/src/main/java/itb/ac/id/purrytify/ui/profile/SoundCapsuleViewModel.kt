@@ -215,23 +215,21 @@ class SoundCapsuleViewModel @Inject constructor(
         }
     }
     
-    fun formatTime(milliseconds: Long): String {
-        val totalSeconds = milliseconds / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
+    fun formatTime(seconds: Long): String {
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
         
         return when {
             hours > 0 -> "${hours}h ${minutes}min"
             minutes > 0 -> "${minutes}min"
-            else -> "${totalSeconds}s"
+            else -> "${seconds}s"
         }
     }
     
-    fun formatTimeDetailed(milliseconds: Long): String {
-        val totalSeconds = milliseconds / 1000
-        val hours = totalSeconds / 3600
-        val minutes = (totalSeconds % 3600) / 60
-        val seconds = totalSeconds % 60
+    fun formatTimeDetailed(seconds: Long): String {
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
+        val seconds = seconds % 60
         
         return when {
             hours > 0 -> String.format("%02d:%02d:%02d", hours, minutes, seconds)
@@ -297,7 +295,7 @@ class SoundCapsuleViewModel @Inject constructor(
                     writer.append("\n")
                     
                     // Day Streaks
-                    writer.append("DAY STREAKS (2+ consecutive days)\n")
+                    writer.append("DAY STREAKS\n")
                     writer.append("Song,Artist,Streak Days,Start Date,End Date\n")
                     dayStreaks.forEach { streak ->
                         writer.append("\"${streak.songTitle}\",\"${streak.songArtist}\",${streak.streakDays},${streak.startDate},${streak.endDate}\n")

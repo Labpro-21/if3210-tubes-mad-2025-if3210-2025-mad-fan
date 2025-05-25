@@ -11,7 +11,7 @@ data class MonthlyAnalytics(
     val analyticsId: Int = 0,
     val userID: Int,
     val month: String, // Format: "2025-05"
-    val totalListeningTime: Long = 0L, // Total time in milliseconds
+    val totalListeningTime: Long = 0L,
     val songsPlayed: Int = 0,
     val topArtist: String? = null,
     val topArtistPlayCount: Int = 0,
@@ -31,7 +31,7 @@ data class DailyListening(
     val dailyId: Int = 0,
     val userID: Int,
     val date: String, // Format: "2025-05-25"
-    val listeningTimeSeconds: Long = 0L, // Time in seconds
+    val listeningTimeSeconds: Long = 0L,
     val songsPlayed: Int = 0,
     val createdAt: Long = System.currentTimeMillis()
 )
@@ -50,8 +50,8 @@ data class SongPlayCount(
     val songId: Int,
     val songTitle: String,
     val songArtist: String,
-    val imagePath: String = "", // Image path from Song table
-    val songDurationSeconds: Long, // Song duration in seconds
+    val imagePath: String = "",
+    val songDurationSeconds: Long,
     val month: String, // Format: "2025-05"
     val playCount: Int = 0,
     val totalListeningTime: Long = 0L, // Total listening time in seconds
@@ -73,7 +73,7 @@ data class ArtistPlayCount(
     val imagePath: String = "",
     val month: String, // Format: "2025-05"
     val playCount: Int = 0,
-    val totalListeningTime: Long = 0L, // Total listening time in seconds
+    val totalListeningTime: Long = 0L,
     val lastPlayed: Long = System.currentTimeMillis()
 )
 
@@ -95,12 +95,11 @@ data class DailySongPlay(
     val imagePath: String = "",
     val date: String, // Format: "2025-05-25"
     val playCount: Int = 0,
-    val totalListeningTime: Long = 0L, // Total listening time in seconds for this song on this day
+    val totalListeningTime: Long = 0L,
     val firstPlayAt: Long = System.currentTimeMillis(),
     val lastPlayAt: Long = System.currentTimeMillis()
 )
 
-// Data classes for aggregated analytics
 data class MonthlyStats(
     val month: String,
     val totalListeningTimeSeconds: Long,

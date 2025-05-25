@@ -167,7 +167,7 @@ The recommendation engine has been upgraded with Top Mixes feature, delivering p
 
 12. Recommendation: Top Mixes
 <div align="center">
-  <img src="screenshot/milestone2/topmixes.png" alt="Top Mixes" width="29%"/>
+  <img src="screenshot/milestone2/topmixes2.png" alt="Top Mixes" width="29%"/>
 </div>
 
 ### Project Status (Milestone 2)
@@ -183,8 +183,8 @@ Project is complete with advanced features
 ### Work Hours (Milestone 2)
 | **NIM**  |           **Nama**            | **Work Hours**    |
 | :------: | :---------------------------: | ----------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |        74         |
-| 13522074 |    Muhammad Naufal Aulia      |                 |
+| 13522020 | Aurelius Justin Philo Fanjaya |                 |
+| 13522074 |    Muhammad Naufal Aulia      |      73         |
 | 13522090 |        Fedrianz Dharma        |      50          |
 
 ---

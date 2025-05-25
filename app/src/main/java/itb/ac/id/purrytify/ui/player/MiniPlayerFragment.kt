@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,6 +24,7 @@ import itb.ac.id.purrytify.ui.onlinesong.OnlineSongViewModel
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.CreateQRModalBottomSheet
 import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.shareDeepLink
+import android.content.res.Configuration
 
 @Composable
 fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
@@ -31,8 +33,9 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
     val isPlaying by viewModel.isPlaying.collectAsState()
     val onlineSongViewModel = hiltViewModel<OnlineSongViewModel>()
     val context = LocalContext.current
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val deepLink = "purrytify://song/${currentSong?.songId}"
-
     val showQRSheet = remember { mutableStateOf(false) }
     val showShareMenu = remember { mutableStateOf(false) }
 
@@ -46,110 +49,215 @@ fun MiniPlayer(viewModel: SongPlayerViewModel, onExpand: () -> Unit) {
         ) {
             Column {
                 Row(
-                    modifier = Modifier.padding(8.dp),
+                    modifier = Modifier.padding(if (isLandscape) 6.dp else 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AsyncImage(
                         model = currentSong!!.imagePath,
                         contentDescription = "Artwork",
-                        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp))
+                        modifier = Modifier
+                            .size(if (isLandscape) 36.dp else 48.dp)
+                            .clip(RoundedCornerShape(4.dp))
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(if (isLandscape) 6.dp else 8.dp))
+
                     // Song title and artist
                     Column(
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text(currentSong!!.title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
-                        Text(currentSong!!.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
+                        Text(
+                            text = currentSong!!.title,
+                            style = if (isLandscape)
+                                MaterialTheme.typography.titleSmall
+                            else
+                                MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = currentSong!!.artist,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            maxLines = 1
+                        )
                     }
-
-                    // share jadi dropdown option
-                    if (currentSong!!.isOnline) {
-                        Box {
-                            IconButton(onClick = { showShareMenu.value = true }) {
-                                Icon(
-                                    imageVector = Icons.Default.Share,
-                                    tint = Color.White,
-                                    contentDescription = "Share",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                            DropdownMenu(
-                                expanded = showShareMenu.value,
-                                onDismissRequest = { showShareMenu.value = false },
-                                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
-                            ) {
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Default.Link,
-                                                contentDescription = "Share URL",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text("Share via URL")
+                    // landscape
+                    if (isLandscape) {
+                        if (currentSong!!.isOnline) {
+                            Box {
+                                IconButton(
+                                    onClick = { showShareMenu.value = true },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        tint = Color.White,
+                                        contentDescription = "Share",
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showShareMenu.value,
+                                    onDismissRequest = { showShareMenu.value = false },
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Link,
+                                                    contentDescription = "Share URL",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("Share via URL", style = MaterialTheme.typography.bodySmall)
+                                            }
+                                        },
+                                        onClick = {
+                                            shareDeepLink(context, deepLink)
+                                            showShareMenu.value = false
                                         }
-                                    },
-                                    onClick = {
-                                        shareDeepLink(context, deepLink)
-                                        showShareMenu.value = false
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Icon(
-                                                imageVector = Icons.Default.QrCode2,
-                                                contentDescription = "Share QR",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text("Share via QR")
+                                    )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.QrCode2,
+                                                    contentDescription = "Share QR",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Text("Share via QR", style = MaterialTheme.typography.bodySmall)
+                                            }
+                                        },
+                                        onClick = {
+                                            showQRSheet.value = true
+                                            showShareMenu.value = false
                                         }
-                                    },
-                                    onClick = {
-                                        showQRSheet.value = true
-                                        showShareMenu.value = false
-                                    }
-                                )
+                                    )
+                                }
                             }
                         }
-                    }
-
-                    IconButton(onClick = { viewModel.previousSong() }) {
-                        Icon(
-                            Icons.Default.SkipPrevious,
-                            contentDescription = "Previous",
-                            tint = Color.White
-                        )
-                    }
-                    IconButton(onClick = {
-                        viewModel.togglePlayPause()
-                    }) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            tint = Color.White,
-                            contentDescription = "Play/Pause"
-                        )
-                    }
-                    IconButton(onClick = { viewModel.nextSong() }) {
-                        Icon(
-                            Icons.Default.SkipNext,
-                            contentDescription = "Next",
-                            tint = Color.White
-                        )
+                        IconButton(
+                            onClick = { viewModel.previousSong() },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.SkipPrevious,
+                                contentDescription = "Previous",
+                                tint = Color.White
+                            )
+                        }
+                        IconButton(
+                            onClick = { viewModel.togglePlayPause() },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                tint = Color.White,
+                                contentDescription = "Play/Pause",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { viewModel.nextSong() },
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.SkipNext,
+                                contentDescription = "Next",
+                                tint = Color.White
+                            )
+                        }
+                    } else {
+                        // portrait awal
+                        if (currentSong!!.isOnline) {
+                            Box {
+                                IconButton(onClick = { showShareMenu.value = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        tint = Color.White,
+                                        contentDescription = "Share",
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                                DropdownMenu(
+                                    expanded = showShareMenu.value,
+                                    onDismissRequest = { showShareMenu.value = false },
+                                    modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Link,
+                                                    contentDescription = "Share URL",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Share via URL")
+                                            }
+                                        },
+                                        onClick = {
+                                            shareDeepLink(context, deepLink)
+                                            showShareMenu.value = false
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    imageVector = Icons.Default.QrCode2,
+                                                    contentDescription = "Share QR",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
+                                                Text("Share via QR")
+                                            }
+                                        },
+                                        onClick = {
+                                            showQRSheet.value = true
+                                            showShareMenu.value = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        IconButton(onClick = { viewModel.previousSong() }) {
+                            Icon(
+                                Icons.Default.SkipPrevious,
+                                contentDescription = "Previous",
+                                tint = Color.White
+                            )
+                        }
+                        IconButton(onClick = { viewModel.togglePlayPause() }) {
+                            Icon(
+                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                tint = Color.White,
+                                contentDescription = "Play/Pause"
+                            )
+                        }
+                        IconButton(onClick = { viewModel.nextSong() }) {
+                            Icon(
+                                Icons.Default.SkipNext,
+                                contentDescription = "Next",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
-                // Placeholder for progress bar
+
+                // Progress bar
                 LinearProgressIndicator(
                     progress = { position.toFloat() / currentSong!!.duration },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(4.dp)
-                        .padding(horizontal = 12.dp)
+                        .height(if (isLandscape) 3.dp else 4.dp)
+                        .padding(horizontal = if (isLandscape) 8.dp else 12.dp)
                         .clip(RoundedCornerShape(0.dp))
                         .align(Alignment.CenterHorizontally),
                     color = MaterialTheme.colorScheme.primary,
@@ -190,7 +298,6 @@ fun MiniPlayerPreview() {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp)),
-    //            .clickable { onExpand() }
             color = Color(0x8e550a1c),
 
         ) {

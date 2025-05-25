@@ -98,6 +98,22 @@ fun TrackViewFragment(
                                 .aspectRatio(1f)
                                 .fillMaxSize()
                         )
+
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                        ) {
+                            Icon(
+                                Icons.Default.ExpandMore,
+                                contentDescription = "Back",
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .rotate(90f),
+                                tint = Color.White
+                            )
+                        }
+
                         if (isBuffering) {
                             Box(
                                 modifier = Modifier
@@ -123,20 +139,9 @@ fun TrackViewFragment(
                     ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            IconButton(onClick = onBack) {
-                                Icon(
-                                    Icons.Default.ExpandMore,
-                                    contentDescription = "Back",
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .rotate(90f),
-                                    tint = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-
                             Box {
                                 IconButton(onClick = { showMenu = true }) {
                                     Icon(

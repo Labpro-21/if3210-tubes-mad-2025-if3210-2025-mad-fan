@@ -1,9 +1,7 @@
 package itb.ac.id.purrytify.ui.home
 
 import android.content.Intent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,9 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Icon
@@ -126,7 +122,7 @@ fun HomeContent(
 
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
         ) {
             Column(
                 modifier = Modifier.width(120.dp),
@@ -169,6 +165,29 @@ fun HomeContent(
 
                 Text(
                     text = currentCountry,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.titleSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Column(
+                modifier = Modifier.width(120.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OnlineCover(
+                    title = "Top 30",
+                    subtitle = "Mix",
+                    gradientType = "recommended",
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    onOnlineSong("recommended_song")
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Recommended",
                     color = MaterialTheme.colorScheme.onBackground,
                     style = MaterialTheme.typography.titleSmall,
                     maxLines = 1,

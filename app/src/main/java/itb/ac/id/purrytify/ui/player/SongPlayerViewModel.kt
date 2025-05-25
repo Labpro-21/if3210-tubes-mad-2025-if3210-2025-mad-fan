@@ -77,8 +77,8 @@ class SongPlayerViewModel @Inject constructor(
     val _networkStatus = MutableStateFlow(ConnectionStatus.Available)
     val networkStatus: StateFlow<ConnectionStatus> = _networkStatus
 
-    var lastPosition: Long = 0L
-    var positionSeekWhileOffline: Long? = null
+    private var lastPosition: Long = 0L
+    private var positionSeekWhileOffline: Long? = null
 
     // Audio device management
     private lateinit var audioDeviceManager: AudioDeviceManager
@@ -386,7 +386,7 @@ class SongPlayerViewModel @Inject constructor(
     }
 
     fun seekTo(position: Long) {
-        if (_networkStatus.value == ConnectionStatus.Available) {
+        if (_networkStatus.value == ConnectionStatus.Available || _currentSong.value?.isOnline == false) {
             songPlayer.seekTo(position)
             _position.value = position
             positionSeekWhileOffline = null
@@ -400,7 +400,7 @@ class SongPlayerViewModel @Inject constructor(
     private fun startUpdatingPosition() {
         viewModelScope.launch {
             while (true) {
-                if (positionSeekWhileOffline == null) {
+                if (positionSeekWhileOffline == null || _currentSong.value?.isOnline == false) {
                     _position.value = songPlayer.currentPosition
                 }
                 delay(200)

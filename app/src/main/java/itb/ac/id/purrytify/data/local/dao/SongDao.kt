@@ -11,10 +11,10 @@ interface SongDao {
     @Query("SELECT * FROM song WHERE userID = :userId")
     fun getAll(userId: Int): Flow<List<Song>>
 
-    @Query("SELECT * FROM song WHERE userID = :userId AND isLiked = true")
+    @Query("SELECT * FROM song WHERE userID = :userId AND isLiked = 1")
     fun getLiked(userId: Int): Flow<List<Song>>
 
-    @Query("SELECT * FROM song WHERE userID = :userId AND isDownloaded = true")
+    @Query("SELECT * FROM song WHERE userID = :userId AND isDownloaded = 1")
     fun getDownloaded(userId: Int): Flow<List<Song>>
 
     @Query("SELECT * FROM song WHERE userID = :userId ORDER BY createdAt DESC LIMIT 10")
@@ -26,7 +26,7 @@ interface SongDao {
     @Query("SELECT COUNT(*) FROM song WHERE userID = :userId")
     fun getAllCount(userId: Int): Flow<Int>
 
-    @Query("SELECT COUNT(*) FROM song WHERE userID = :userId AND isLiked = true")
+    @Query("SELECT COUNT(*) FROM song WHERE userID = :userId AND isLiked = 1")
     fun getLikedCount(userId: Int): Flow<Int>
 
     @Query("SELECT COUNT(*) FROM song WHERE userID = :userId AND lastPlayed IS NOT NULL")
@@ -40,6 +40,9 @@ interface SongDao {
 
     @Query("SELECT * FROM song WHERE userID = :userId AND songId < :songId ORDER BY songId DESC LIMIT 1")
     suspend fun getPreviousSong(songId: Int, userId: Int): Song?
+
+    @Query("SELECT * FROM song WHERE userID = :userId AND isLiked = 1 AND lastPlayed IS NOT NULL ORDER BY lastPlayed DESC LIMIT 10")
+    suspend fun getRecommended(userId: Int): List<Song>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(vararg song: Song): List<Long> // return id

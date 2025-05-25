@@ -30,6 +30,7 @@ import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.shareDeepLink
 import itb.ac.id.purrytify.utils.AudioDeviceSelectionDialog
 import itb.ac.id.purrytify.utils.AudioRoutingButton
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
 
 @Composable
 fun TrackViewFragment(
@@ -55,7 +56,7 @@ fun TrackViewFragment(
     // Audio device state
     val currentAudioDevice by viewModel.currentAudioDevice.collectAsState()
     val availableAudioDevices by remember {
-        derivedStateOf { 
+        derivedStateOf {
             if (showAudioDeviceDialog) {
                 viewModel.getAvailableAudioDevices()
             } else {
@@ -376,25 +377,28 @@ fun TrackViewFragment(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(24.dp),
+                        .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Row {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         IconButton(onClick = onBack) {
                             Icon(
                                 Icons.Default.ExpandMore,
                                 contentDescription = "Back",
-                                modifier = Modifier.size(40.dp),
+                                modifier = Modifier.size(34.dp),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
-                        Spacer(modifier = Modifier.weight(1f))
                         Box {
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
                                     Icons.Default.MoreVert,
                                     contentDescription = "More Options",
-                                    modifier = Modifier.size(40.dp),
+                                    modifier = Modifier.size(32.dp),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
@@ -457,8 +461,10 @@ fun TrackViewFragment(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(400.dp)
-                            .padding(16.dp)
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .padding(12.dp)
+                            .weight(1f, fill = false)
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(model = song!!.imagePath),
@@ -472,7 +478,7 @@ fun TrackViewFragment(
                                     .background(Color.Black.copy(alpha = 0.3f))
                             )
                             CircularProgressIndicator(
-                                modifier = Modifier.size(64.dp),
+                                modifier = Modifier.size(48.dp),
                                 color = Color.White,
                                 strokeWidth = 4.dp
                             )
@@ -482,85 +488,97 @@ fun TrackViewFragment(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
+                            .padding(horizontal = 12.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = song!!.title,
                                 style = MaterialTheme.typography.headlineSmall,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                             Text(
                                 text = song!!.artist,
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.tertiary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                         // like for local only
                         if (!song!!.isOnline) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = viewModel::toggleFavorite) {
-                                    Icon(
-                                        imageVector = if (song!!.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                                        contentDescription = "Like",
-                                        tint = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
+                            IconButton(onClick = viewModel::toggleFavorite) {
+                                Icon(
+                                    imageVector = if (song!!.isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                    contentDescription = "Like",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Slider(
-                        value = position.toFloat() / song!!.duration.toFloat(),
-                        onValueChange = { newValue ->
-                            viewModel.seekTo((song!!.duration * newValue).toLong())
-                        },
-                        onValueChangeFinished = {},
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = SliderDefaults.colors(
-                            thumbColor = MaterialTheme.colorScheme.onSurface,
-                            activeTrackColor = MaterialTheme.colorScheme.onSurface,
-                            inactiveTrackColor = Color(0xff777777),
-                        )
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+
+                    Spacer(modifier = Modifier.weight(0.1f))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
                     ) {
-                        Text(
-                            text = viewModel.formatTime(position),
-                            color = MaterialTheme.colorScheme.onSurface,
+                        Slider(
+                            value = position.toFloat() / song!!.duration.toFloat(),
+                            onValueChange = { newValue ->
+                                viewModel.seekTo((song!!.duration * newValue).toLong())
+                            },
+                            onValueChangeFinished = {},
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colorScheme.onSurface,
+                                activeTrackColor = MaterialTheme.colorScheme.onSurface,
+                                inactiveTrackColor = Color(0xff777777),
+                            )
                         )
-                        Text(
-                            text = viewModel.formatTime(song!!.duration),
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = viewModel.formatTime(position),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                text = viewModel.formatTime(song!!.duration),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Spacer(modifier = Modifier.weight(0.1f))
+
                     Row(
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Shuffle button
                         IconButton(
-                            onClick = {
-                                viewModel.toggleShuffle()
-                            },
+                            onClick = { viewModel.toggleShuffle() },
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(
                                 Icons.Default.Shuffle,
                                 contentDescription = "Shuffle",
                                 tint = if (isShuffleActive) Color.White else Color.Gray,
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
-                        
+
                         IconButton(
                             onClick = { viewModel.previousSong() },
                             modifier = Modifier.weight(1f)
@@ -569,11 +587,10 @@ fun TrackViewFragment(
                                 Icons.Default.SkipPrevious,
                                 contentDescription = "Previous",
                                 tint = Color.White,
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
-                        
-                        // Play/Pause button (center)
+
                         IconButton(
                             onClick = { viewModel.togglePlayPause() },
                             modifier = Modifier.weight(1f)
@@ -585,7 +602,7 @@ fun TrackViewFragment(
                                 modifier = Modifier.size(40.dp)
                             )
                         }
-                        
+
                         IconButton(
                             onClick = { viewModel.nextSong() },
                             modifier = Modifier.weight(1f)
@@ -594,16 +611,13 @@ fun TrackViewFragment(
                                 Icons.Default.SkipNext,
                                 contentDescription = "Next",
                                 tint = Color.White,
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(32.dp)
                             )
                         }
-                        
+
                         // Repeat One/All button
                         IconButton(
-                            onClick = {
-                                // Cycle mode nya
-                                viewModel.toggleRepeatMode()
-                            },
+                            onClick = { viewModel.toggleRepeatMode() },
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(
@@ -617,11 +631,10 @@ fun TrackViewFragment(
                                     SongPlayerViewModel.RepeatMode.OFF -> Color.Gray
                                     SongPlayerViewModel.RepeatMode.ONE, SongPlayerViewModel.RepeatMode.ALL -> Color.White
                                 },
-                                modifier = Modifier.size(28.dp)
+                                modifier = Modifier.size(24.dp)
                             )
                         }
-                        
-                        // Audio device button (smaller)
+
                         AudioRoutingButton(
                             currentDevice = currentAudioDevice,
                             onClick = { showAudioDeviceDialog = true },
@@ -629,7 +642,7 @@ fun TrackViewFragment(
                         )
                     }
 
-                    // Audio routing controls have been integrated into the playback controls row
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -644,13 +657,11 @@ fun TrackViewFragment(
             }
         }
 
-        // Audio device selection dialog
         if (showAudioDeviceDialog) {
-            // Update current device when dialog opens
             LaunchedEffect(showAudioDeviceDialog) {
                 viewModel.getCurrentAudioDevice()
             }
-            
+
             AudioDeviceSelectionDialog(
                 availableDevices = availableAudioDevices,
                 currentDevice = currentAudioDevice,

@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.media.AudioManager
 import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
@@ -23,6 +24,8 @@ import javax.inject.Inject
 import itb.ac.id.purrytify.data.repository.AnalyticsRepository
 import itb.ac.id.purrytify.data.repository.OnlineSongRepository
 import itb.ac.id.purrytify.utils.*
+import itb.ac.id.purrytify.utils.AudioDevice
+import itb.ac.id.purrytify.utils.AudioDeviceManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -76,6 +79,11 @@ class SongPlayerViewModel @Inject constructor(
 
     var lastPosition: Long = 0L
     var positionSeekWhileOffline: Long? = null
+
+    // Audio device management
+    private lateinit var audioDeviceManager: AudioDeviceManager
+    private val _currentAudioDevice = MutableStateFlow<AudioDevice?>(null)
+    val currentAudioDevice: StateFlow<AudioDevice?> = _currentAudioDevice
 
     val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
@@ -186,6 +194,9 @@ class SongPlayerViewModel @Inject constructor(
         songPlayer.addListener(playerListener)
         startUpdatingPosition()
         bindNotificationService()
+        
+        // inisialisasi audio device 
+        audioDeviceManager = AudioDeviceManager(application)
     }
 
     @OptIn(FlowPreview::class)
@@ -265,8 +276,20 @@ class SongPlayerViewModel @Inject constructor(
         _songQueue.value = listOf(song)
         _isQueueEmpty.value = _songQueue.value.isEmpty()
         currentIndex = 0
+        
+        ensureAudioOutput()
+        
         playAtIndex(currentIndex)
         startNotificationService()
+    }
+
+    private fun ensureAudioOutput() {
+        try {
+            val audioManager = application.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            audioManager.mode = AudioManager.MODE_NORMAL
+        } catch (e: Exception) {
+            Log.e("SongPlayerViewModel", "Error ensuring audio output: ${e.message}")
+        }
     }
 
     private fun playAtIndex(index: Int) {
@@ -461,8 +484,26 @@ class SongPlayerViewModel @Inject constructor(
         songPlayer.release()
         _songQueue.value = emptyList()
         _currentSong.value = null
+        // reset audio routing
+        resetAudioRouting()
         // Unbind dan stop notification service
         stopNotificationService()
+    }
+
+    private fun resetAudioRouting() {
+        try {
+            if (::audioDeviceManager.isInitialized) {
+                val audioManager = application.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                audioManager.mode = AudioManager.MODE_NORMAL
+                audioManager.isSpeakerphoneOn = false
+                if (audioManager.isBluetoothScoOn) {
+                    audioManager.stopBluetoothSco()
+                    audioManager.isBluetoothScoOn = false
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("SongPlayerViewModel", "Error resetting audio routing: ${e.message}")
+        }
     }
 
     fun deleteSong() {
@@ -493,5 +534,29 @@ class SongPlayerViewModel @Inject constructor(
                 Log.e("SongPlayerViewModel", "Error fetching online song: ${e.message}")
             }
         }
+    }
+
+    // Audio device management
+    fun getAvailableAudioDevices(): List<AudioDevice> {
+        return audioDeviceManager.getAvailableAudioDevices()
+    }
+
+    fun setAudioDevice(device: AudioDevice) {
+        val success = audioDeviceManager.setAudioDevice(device)
+        if (success) {
+            viewModelScope.launch {
+                delay(300)
+                getCurrentAudioDevice()
+            }
+            Log.d("SongPlayerViewModel", "Audio device set to: ${device.name}")
+        } else {
+            Log.e("SongPlayerViewModel", "Failed to set audio device: ${device.name}")
+        }
+    }
+
+    fun getCurrentAudioDevice() {
+        val device = audioDeviceManager.getCurrentAudioDevice()
+        _currentAudioDevice.value = device
+        Log.d("SongPlayerViewModel", "Current audio device: ${device?.name ?: "Unknown"}")
     }
 }

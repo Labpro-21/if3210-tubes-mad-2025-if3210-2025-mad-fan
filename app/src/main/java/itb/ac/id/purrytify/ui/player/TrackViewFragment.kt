@@ -27,6 +27,8 @@ import itb.ac.id.purrytify.ui.theme.DavyGrey
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.CreateQRModalBottomSheet
 import itb.ac.id.purrytify.utils.OnlineSongUtil.Companion.shareDeepLink
+import itb.ac.id.purrytify.utils.AudioDeviceSelectionDialog
+import itb.ac.id.purrytify.utils.AudioRoutingButton
 import androidx.compose.ui.platform.LocalConfiguration
 
 @Composable
@@ -44,10 +46,23 @@ fun TrackViewFragment(
 
     var showMenu by remember { mutableStateOf(false) }
     var showSheet by remember { mutableStateOf(false) }
+    var showAudioDeviceDialog by remember { mutableStateOf(false) }
     // Shuffle & repeat state
     val isShuffleActive by viewModel.isShuffleEnabled.collectAsState()
     // Mode repeat: 0 = Off, 1 = Repeat One, 2 = Repeat All
     val repeatMode by viewModel.repeatMode.collectAsState()
+
+    // Audio device state
+    val currentAudioDevice by viewModel.currentAudioDevice.collectAsState()
+    val availableAudioDevices by remember {
+        derivedStateOf { 
+            if (showAudioDeviceDialog) {
+                viewModel.getAvailableAudioDevices()
+            } else {
+                emptyList()
+            }
+        }
+    }
 
     val context = LocalContext.current
     var showSheetQR by remember { mutableStateOf(false) }
@@ -271,14 +286,15 @@ fun TrackViewFragment(
                         }
 
                         Row(
-                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            horizontalArrangement = Arrangement.Center,
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             IconButton(
                                 onClick = {
                                     viewModel.toggleShuffle()
-                                }
+                                },
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Icon(
                                     Icons.Default.Shuffle,
@@ -288,7 +304,10 @@ fun TrackViewFragment(
                                 )
                             }
 
-                            IconButton(onClick = { viewModel.previousSong() }) {
+                            IconButton(
+                                onClick = { viewModel.previousSong() },
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Icon(
                                     Icons.Default.SkipPrevious,
                                     contentDescription = "Previous",
@@ -297,9 +316,11 @@ fun TrackViewFragment(
                                 )
                             }
 
-                            IconButton(onClick = {
-                                viewModel.togglePlayPause()
-                            }) {
+                            // Play/Pause button (center)
+                            IconButton(
+                                onClick = { viewModel.togglePlayPause() },
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Icon(
                                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                     contentDescription = "Play/Pause",
@@ -308,7 +329,10 @@ fun TrackViewFragment(
                                 )
                             }
 
-                            IconButton(onClick = { viewModel.nextSong() }) {
+                            IconButton(
+                                onClick = { viewModel.nextSong() },
+                                modifier = Modifier.weight(1f)
+                            ) {
                                 Icon(
                                     Icons.Default.SkipNext,
                                     contentDescription = "Next",
@@ -320,7 +344,8 @@ fun TrackViewFragment(
                             IconButton(
                                 onClick = {
                                     viewModel.toggleRepeatMode()
-                                }
+                                },
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Icon(
                                     imageVector = when (repeatMode) {
@@ -336,6 +361,13 @@ fun TrackViewFragment(
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
+
+                            // Audio routing button (smaller)
+                            AudioRoutingButton(
+                                currentDevice = currentAudioDevice,
+                                onClick = { showAudioDeviceDialog = true },
+                                modifier = Modifier.weight(0.7f)
+                            )
                         }
                     }
                 }
@@ -510,7 +542,7 @@ fun TrackViewFragment(
                     }
                     Spacer(modifier = Modifier.height(32.dp))
                     Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -518,7 +550,8 @@ fun TrackViewFragment(
                         IconButton(
                             onClick = {
                                 viewModel.toggleShuffle()
-                            }
+                            },
+                            modifier = Modifier.weight(1f)
                         ) {
                             Icon(
                                 Icons.Default.Shuffle,
@@ -527,8 +560,11 @@ fun TrackViewFragment(
                                 modifier = Modifier.size(28.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        IconButton(onClick = { viewModel.previousSong() }) {
+                        
+                        IconButton(
+                            onClick = { viewModel.previousSong() },
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Icon(
                                 Icons.Default.SkipPrevious,
                                 contentDescription = "Previous",
@@ -536,9 +572,12 @@ fun TrackViewFragment(
                                 modifier = Modifier.size(40.dp)
                             )
                         }
-                        IconButton(onClick = {
-                            viewModel.togglePlayPause()
-                        }) {
+                        
+                        // Play/Pause button (center)
+                        IconButton(
+                            onClick = { viewModel.togglePlayPause() },
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = "Play/Pause",
@@ -546,7 +585,11 @@ fun TrackViewFragment(
                                 modifier = Modifier.size(40.dp)
                             )
                         }
-                        IconButton(onClick = { viewModel.nextSong() }) {
+                        
+                        IconButton(
+                            onClick = { viewModel.nextSong() },
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Icon(
                                 Icons.Default.SkipNext,
                                 contentDescription = "Next",
@@ -554,13 +597,14 @@ fun TrackViewFragment(
                                 modifier = Modifier.size(40.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(16.dp))
+                        
                         // Repeat One/All button
                         IconButton(
                             onClick = {
                                 // Cycle mode nya
                                 viewModel.toggleRepeatMode()
-                            }
+                            },
+                            modifier = Modifier.weight(1f)
                         ) {
                             Icon(
                                 imageVector = when (repeatMode) {
@@ -576,7 +620,16 @@ fun TrackViewFragment(
                                 modifier = Modifier.size(28.dp)
                             )
                         }
+                        
+                        // Audio device button (smaller)
+                        AudioRoutingButton(
+                            currentDevice = currentAudioDevice,
+                            onClick = { showAudioDeviceDialog = true },
+                            modifier = Modifier.weight(0.7f)
+                        )
                     }
+
+                    // Audio routing controls have been integrated into the playback controls row
                 }
             }
         }
@@ -589,6 +642,24 @@ fun TrackViewFragment(
                     song = song!!,
                 )
             }
+        }
+
+        // Audio device selection dialog
+        if (showAudioDeviceDialog) {
+            // Update current device when dialog opens
+            LaunchedEffect(showAudioDeviceDialog) {
+                viewModel.getCurrentAudioDevice()
+            }
+            
+            AudioDeviceSelectionDialog(
+                availableDevices = availableAudioDevices,
+                currentDevice = currentAudioDevice,
+                onDeviceSelected = { device ->
+                    viewModel.setAudioDevice(device)
+                    showAudioDeviceDialog = false
+                },
+                onDismiss = { showAudioDeviceDialog = false }
+            )
         }
     }
 }

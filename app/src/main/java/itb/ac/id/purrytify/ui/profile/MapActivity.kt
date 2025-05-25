@@ -223,8 +223,8 @@ suspend fun getCountryFromCoordinates(latitude: Double, longitude: Double): Pair
             val jsonResponse = org.json.JSONObject(response)
 
             val address = jsonResponse.optJSONObject("address")
-            val countryName = address?.optString("country") ?: "Unknown"
-            val countryCode = address?.optString("country_code")?.uppercase() ?: "XX"
+            val countryName = address?.optString("country") ?: "Indonesia"
+            val countryCode = address?.optString("country_code")?.uppercase() ?: "ID"
 
             Pair(countryName, countryCode)
         } catch (e: Exception) {

@@ -346,8 +346,8 @@ fun ProfileInfoSection(
                         .data(imageUrl)
                         .crossfade(true)
                         .transformations(CircleCropTransformation())
-                        .error(R.drawable.profile_dummy)
-                        .placeholder(R.drawable.profile_dummy)
+                        .error(R.drawable.logo)
+                        .placeholder(R.drawable.logo)
                         .build()
                 )
                 Image(
@@ -360,7 +360,7 @@ fun ProfileInfoSection(
                 )
             } else {
                 Image(
-                    painter = painterResource(id = R.drawable.profile_dummy),
+                    painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Profile Photo",
                     modifier = Modifier
                         .size(if (isCompact) 100.dp else 130.dp)

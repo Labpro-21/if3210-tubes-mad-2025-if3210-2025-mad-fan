@@ -105,9 +105,11 @@ The recommendation engine has been upgraded with Top Mixes feature, delivering p
 </div>
 <br>
 
-5. Notification Controls
+5. Notification Controls (Virtual Device, Realme Device, Lock Screen)
 <div align="center">
   <img src="screenshot/milestone2/notifications.png" alt="Notification Controls" width="29%"/>
+  <img src="screenshot/milestone2/notif2.jpg" alt="Notification Controls" width="29%"/>
+  <img src="screenshot/milestone2/notif3.jpg" alt="Notification Controls" width="29%"/>
 </div>
 <br>
 

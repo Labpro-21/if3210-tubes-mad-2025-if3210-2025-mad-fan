@@ -312,15 +312,15 @@ class SongPlayerViewModel @Inject constructor(
         viewModelScope.launch {
             if (!updatedSong.isOnline) {
                 songDao.update(updatedSong)
+                // Only track song play for local songs
+                val durationSeconds = updatedSong.duration / 1000
+                analyticsRepository.trackSongPlay(
+                    songId = updatedSong.songId,
+                    songTitle = updatedSong.title,
+                    songArtist = updatedSong.artist,
+                    songDurationSeconds = durationSeconds
+                )
             }
-            
-            val durationSeconds = updatedSong.duration / 1000
-            analyticsRepository.trackSongPlay(
-                songId = updatedSong.songId,
-                songTitle = updatedSong.title,
-                songArtist = updatedSong.artist,
-                songDurationSeconds = durationSeconds
-            )
         }
     }
 

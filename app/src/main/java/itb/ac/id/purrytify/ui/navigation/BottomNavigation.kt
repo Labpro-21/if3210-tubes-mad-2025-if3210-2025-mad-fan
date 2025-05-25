@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import itb.ac.id.purrytify.ui.recommendation.RecommendedListSong
 
 @Composable
 fun MainScreen(navController: NavHostController, songPlayerViewModel: SongPlayerViewModel, deepLink: Uri?) {
@@ -173,6 +174,18 @@ fun NavigationGraph(songPlayerViewModel: SongPlayerViewModel, navController: Nav
                 isGlobal = false,
                 onPlay = {
                     songPlayerViewModel.setLastScreenRoute("online_song_country")
+                    navController.navigate("track_view")
+                },
+                onBackPressed = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable("recommended_song") {
+            RecommendedListSong(
+                songPlayerViewModel = songPlayerViewModel,
+                onPlay = {
+                    songPlayerViewModel.setLastScreenRoute("recommended_song")
                     navController.navigate("track_view")
                 },
                 onBackPressed = {

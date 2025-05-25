@@ -15,7 +15,7 @@ import itb.ac.id.purrytify.data.local.entity.*
         ArtistPlayCount::class,
         DailySongPlay::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 abstract class PurrytifyDatabase: RoomDatabase() {

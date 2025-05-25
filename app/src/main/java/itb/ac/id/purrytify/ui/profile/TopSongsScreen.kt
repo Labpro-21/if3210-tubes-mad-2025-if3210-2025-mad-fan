@@ -15,15 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.R
 import itb.ac.id.purrytify.data.local.entity.SongPlayCount
+import java.io.File
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -32,10 +34,9 @@ data class TopSong(
     val rank: Int,
     val title: String,
     val artist: String,
-    val albumName: String,
     val plays: Int,
     val listeningTimeMinutes: Long,
-    val imageId: Int
+    val imagePath: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,10 +56,9 @@ fun TopSongsScreen(
                 rank = index + 1,
                 title = songPlayCount.songTitle,
                 artist = songPlayCount.songArtist,
-                albumName = "", // We don't have album info in our analytics
                 plays = songPlayCount.playCount,
                 listeningTimeMinutes = songPlayCount.totalListeningTime / 60,
-                imageId = R.drawable.profile_dummy // Using placeholder image
+                imagePath = songPlayCount.imagePath
             )
         }
     }
@@ -218,14 +218,8 @@ fun TopSongItem(
 
             Spacer(modifier = Modifier.height(2.dp))
 
-            val subtitle = if (song.albumName.isNotEmpty()) {
-                "${song.artist}, ${song.albumName}"
-            } else {
-                song.artist
-            }
-
             Text(
-                text = subtitle,
+                text = song.artist,
                 color = Color.Gray,
                 fontSize = 14.sp,
                 maxLines = 1,
@@ -263,7 +257,7 @@ fun TopSongItem(
         Spacer(modifier = Modifier.width(12.dp))
 
         Image(
-            painter = painterResource(id = song.imageId),
+            painter = rememberAsyncImagePainter(model = song.imagePath),
             contentDescription = "Album art for ${song.title}",
             modifier = Modifier
                 .size(80.dp)

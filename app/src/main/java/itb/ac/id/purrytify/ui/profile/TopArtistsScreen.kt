@@ -18,14 +18,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.R
+import java.io.File
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -33,7 +35,7 @@ import java.util.Locale
 data class TopArtist(
     val rank: Int,
     val name: String,
-    val imageId: Int
+    val imagePath: String
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,7 +150,7 @@ fun TopArtistsScreen(
                             artist = TopArtist(
                                 rank = index + 1,
                                 name = artistData.artist,
-                                imageId = R.drawable.profile_dummy
+                                imagePath = artistData.imagePath,
                             ),
                             modifier = Modifier.padding(vertical = 12.dp)
                         )
@@ -193,8 +195,9 @@ fun TopArtistItem(
             modifier = Modifier.weight(1f)
         )
 
+
         Image(
-            painter = painterResource(id = artist.imageId),
+            painter = rememberAsyncImagePainter(model = artist.imagePath),
             contentDescription = "Artist ${artist.name}",
             modifier = Modifier
                 .size(80.dp)

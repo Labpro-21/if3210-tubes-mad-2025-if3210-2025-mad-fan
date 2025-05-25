@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import itb.ac.id.purrytify.R
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -31,7 +32,7 @@ data class StreakData(
     val days: Int,
     val songName: String,
     val artistName: String,
-    val albumArtId: Int,
+    val imageId: String?,
     val dateRange: String
 )
 
@@ -108,9 +109,9 @@ fun SoundCapsuleSection(
                     month = currentMonth.format(monthFormatter),
                     minutesListened = analyticsUiState.totalListeningTimeThisMonth / 60,
                     topArtist = analyticsUiState.topArtists.firstOrNull()?.artist ?: "No data",
-                    topArtistImageId = R.drawable.profile_dummy,
+                    topArtistImageId = analyticsUiState.topArtists.firstOrNull()?.imagePath,
                     topSong = analyticsUiState.topSongs.firstOrNull()?.songTitle ?: "No data",
-                    topSongImageId = R.drawable.profile_dummy,
+                    topSongImageId = analyticsUiState.topSongs.firstOrNull()?.imagePath,
                     hasStreak = analyticsUiState.dayStreaks.isNotEmpty(),
                     streakData = if (analyticsUiState.dayStreaks.isNotEmpty()) {
                         val firstStreak = analyticsUiState.dayStreaks.first()
@@ -118,7 +119,7 @@ fun SoundCapsuleSection(
                             days = firstStreak.streakDays,
                             songName = firstStreak.songTitle,
                             artistName = firstStreak.songArtist,
-                            albumArtId = R.drawable.profile_dummy,
+                            imageId = firstStreak.imagePath,
                             dateRange = "${firstStreak.startDate} - ${firstStreak.endDate}"
                         )
                     } else null,
@@ -132,9 +133,9 @@ fun SoundCapsuleSection(
                     month = "This Month",
                     minutesListened = 0,
                     topArtist = "Start listening to music",
-                    topArtistImageId = R.drawable.profile_dummy,
+                    topArtistImageId = "",
                     topSong = "No songs played yet",
-                    topSongImageId = R.drawable.profile_dummy,
+                    topSongImageId = "",
                     hasStreak = false,
                     streakData = null,
                     onTimeListenedClick = onTimeListenedClick,
@@ -151,9 +152,9 @@ fun MonthlyCapsule(
     month: String,
     minutesListened: Long,
     topArtist: String,
-    topArtistImageId: Int,
+    topArtistImageId: String?,
     topSong: String,
-    topSongImageId: Int,
+    topSongImageId: String?,
     hasStreak: Boolean = false,
     streakData: StreakData? = null,
     onTimeListenedClick: () -> Unit = {},
@@ -261,7 +262,7 @@ fun MonthlyCapsule(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Image(
-                        painter = painterResource(id = topArtistImageId),
+                        painter = rememberAsyncImagePainter(model = topArtistImageId ?: R.drawable.profile_dummy),
                         contentDescription = "Top Artist Cover",
                         modifier = Modifier
                             .size(80.dp)
@@ -309,7 +310,7 @@ fun MonthlyCapsule(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Image(
-                        painter = painterResource(id = topSongImageId),
+                        painter = rememberAsyncImagePainter(model = topSongImageId),
                         contentDescription = "Top Song Cover",
                         modifier = Modifier
                             .size(80.dp)
@@ -340,7 +341,7 @@ fun MonthlyCapsule(
                             .background(MaterialTheme.colorScheme.surface)
                     ) {
                         Image(
-                            painter = painterResource(id = streakData.albumArtId),
+                            painter = rememberAsyncImagePainter(model = streakData.imageId),
                             contentDescription = "Album Cover",
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop

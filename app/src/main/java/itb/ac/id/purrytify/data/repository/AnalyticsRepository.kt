@@ -3,6 +3,7 @@ package itb.ac.id.purrytify.data.repository
 import android.util.Log
 import itb.ac.id.purrytify.data.api.interceptors.TokenManager
 import itb.ac.id.purrytify.data.local.dao.AnalyticsDao
+import itb.ac.id.purrytify.data.local.dao.SongDao
 import itb.ac.id.purrytify.data.local.entity.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -17,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class AnalyticsRepository @Inject constructor(
     private val analyticsDao: AnalyticsDao,
+    private val songDao: SongDao,
     private val tokenManager: TokenManager
 ) {
     
@@ -83,11 +85,16 @@ class AnalyticsRepository @Inject constructor(
             )
             analyticsDao.insertDailySongPlay(updated)
         } else {
+            // Fetch imagePath from Song table
+            val song = songDao.getById(songId, userID)
+            val imagePath = song?.imagePath ?: ""
+            
             val newDailySongPlay = DailySongPlay(
                 userID = userID,
                 songId = songId,
                 songTitle = songTitle,
                 songArtist = songArtist,
+                imagePath = imagePath,
                 date = date,
                 playCount = 1,
                 totalListeningTime = durationSeconds,
@@ -110,11 +117,16 @@ class AnalyticsRepository @Inject constructor(
             )
             analyticsDao.insertSongPlayCount(updated)
         } else {
+            // Fetch imagePath from Song table
+            val song = songDao.getById(songId, userID)
+            val imagePath = song?.imagePath ?: ""
+            
             val newCount = SongPlayCount(
                 userID = userID,
                 songId = songId,
                 songTitle = songTitle,
                 songArtist = songArtist,
+                imagePath = imagePath,
                 month = month,
                 playCount = 1,
                 totalListeningTime = durationSeconds,
@@ -137,9 +149,14 @@ class AnalyticsRepository @Inject constructor(
             )
             analyticsDao.insertArtistPlayCount(updated)
         } else {
+            val userSongs = songDao.getAll(userID).first()
+            val artistSongs = userSongs.filter { it.artist == artist }
+            val imagePath = artistSongs.firstOrNull()?.imagePath ?: ""
+            
             val newCount = ArtistPlayCount(
                 userID = userID,
                 artist = artist,
+                imagePath = imagePath,
                 month = month,
                 playCount = 1,
                 totalListeningTime = durationSeconds,
@@ -223,6 +240,7 @@ class AnalyticsRepository @Inject constructor(
         for ((songInfo, plays) in songGroups) {
             val (songId, songTitle, songArtist) = songInfo
             val sortedDates = plays.map { it.date }.sorted().distinct() // Remove duplicates and sort
+            val imagePath = plays.firstOrNull()?.imagePath ?: "" // Get imagePath from first play
             
             if (sortedDates.size < 2) continue
             
@@ -265,6 +283,7 @@ class AnalyticsRepository @Inject constructor(
                     DayStreak(
                         songTitle = songTitle,
                         songArtist = songArtist,
+                        imagePath = imagePath,
                         streakDays = longestStreakDays,
                         startDate = longestStreakStart,
                         endDate = longestStreakEnd

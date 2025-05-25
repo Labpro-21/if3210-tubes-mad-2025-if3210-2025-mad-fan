@@ -50,6 +50,7 @@ data class SongPlayCount(
     val songId: Int,
     val songTitle: String,
     val songArtist: String,
+    val imagePath: String = "", // Image path from Song table
     val songDurationSeconds: Long, // Song duration in seconds
     val month: String, // Format: "2025-05"
     val playCount: Int = 0,
@@ -69,6 +70,7 @@ data class ArtistPlayCount(
     val artistPlayCountId: Int = 0,
     val userID: Int,
     val artist: String,
+    val imagePath: String = "",
     val month: String, // Format: "2025-05"
     val playCount: Int = 0,
     val totalListeningTime: Long = 0L, // Total listening time in seconds
@@ -90,6 +92,7 @@ data class DailySongPlay(
     val songId: Int,
     val songTitle: String,
     val songArtist: String,
+    val imagePath: String = "",
     val date: String, // Format: "2025-05-25"
     val playCount: Int = 0,
     val totalListeningTime: Long = 0L, // Total listening time in seconds for this song on this day
@@ -113,6 +116,7 @@ data class MonthlyStats(
 data class DayStreak(
     val songTitle: String,
     val songArtist: String,
+    val imagePath: String = "",
     val streakDays: Int,
     val startDate: String,
     val endDate: String

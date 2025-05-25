@@ -138,6 +138,12 @@ dependencies {
     // Google Location Services
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
+
+    // OSMDroid untuk map
+    implementation(libs.osmdroid.android)
+
+    // JSON parsing
+    implementation(libs.json)
 }
 
 kapt {

@@ -14,6 +14,7 @@
     <!-- Storage -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <!-- Location -->
@@ -92,6 +93,12 @@
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="portrait"
             tools:replace="screenOrientation" />
+
+        <!-- Map Activity -->
+        <activity
+            android:name=".ui.profile.MapActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Purrytify" />
 
         <!-- Notification Service -->
         <service

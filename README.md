@@ -176,14 +176,14 @@ Project is complete with advanced features
 ### Team Members (Milestone 2)
 | **NIM**  |           **Nama**            | **Contributions**                                             |
 | :------: | :---------------------------: | ------------------------------------------------------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |                                             |
+| 13522020 | Aurelius Justin Philo Fanjaya |  Sound capsule, time listened, top songs, top artist, audio routing                                           |
 | 13522074 |    Muhammad Naufal Aulia      | Notification controls, QR code scanner, edit profile, online songs UI, sound capsule UI (sound capsule, time listened, top songs, top artist page), all page responsive                                                               |
 | 13522090 |        Fedrianz Dharma        |  Online Songs, Download Song, Share URL, Share QR, Recommendation                              |
 
 ### Work Hours (Milestone 2)
 | **NIM**  |           **Nama**            | **Work Hours**    |
 | :------: | :---------------------------: | ----------------- |
-| 13522020 | Aurelius Justin Philo Fanjaya |                 |
+| 13522020 | Aurelius Justin Philo Fanjaya |      42         |
 | 13522074 |    Muhammad Naufal Aulia      |      73         |
 | 13522090 |        Fedrianz Dharma        |      50          |
 

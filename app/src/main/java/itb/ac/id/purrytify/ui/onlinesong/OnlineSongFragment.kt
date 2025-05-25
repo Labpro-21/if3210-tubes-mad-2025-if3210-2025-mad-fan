@@ -399,7 +399,15 @@ fun OnlineSongListScreen(
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
-                                    text = if (isGlobal) "GLOBAL" else "COUNTRY",
+                                    text = if (isGlobal) "GLOBAL" else listOf(
+                                        "INDONESIA" to "ID",
+                                        "MALAYSIA" to "MY",
+                                        "UNITED STATES" to "US",
+                                        "UNITED KINGDOM" to "GB",
+                                        "SWITZERLAND" to "CH",
+                                        "GERMANY" to "DE",
+                                        "BRAZIL" to "BR"
+                                    ).find { it.second == selectedCountryCode.value }?.first ?: "Country",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.White.copy(alpha = 0.9f),

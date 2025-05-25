@@ -37,11 +37,12 @@ import itb.ac.id.purrytify.ui.MainActivity
 import itb.ac.id.purrytify.ui.theme.PurrytifyTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.activity.enableEdgeToEdge
 
 @AndroidEntryPoint
 class LoginActivity : AppCompatActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         val splashscreen = installSplashScreen()
         var keepSplashScreen = true
         super.onCreate(savedInstanceState)
@@ -86,7 +87,6 @@ fun LoginScreen(
             }
             context.startActivity(intent)
 
-            // Close the login activity so user can't go back
             if (context is Activity) {
                 context.finish()
             }
@@ -96,6 +96,7 @@ fun LoginScreen(
     BoxWithConstraints(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         val isPortrait = maxHeight > maxWidth
         if (isPortrait) {
+            // portrait awal
             Image(
                 painter = painterResource(id = R.drawable.login_bg),
                 contentDescription = null,
@@ -114,7 +115,7 @@ fun LoginScreen(
                     .align(Alignment.TopCenter)
                     .offset(y = (maxHeight * 0.5f) - 40.dp),
 
-                )
+            )
 
             Column(
                 modifier = Modifier
@@ -123,7 +124,7 @@ fun LoginScreen(
                     .padding(top = (maxHeight * 0.5f) + 32.dp),
                 verticalArrangement = Arrangement.Top,
 
-                ) {
+            ) {
                 Text(
                     text = "Millions of Songs.",
                     color = MaterialTheme.colorScheme.onBackground,
@@ -211,15 +212,139 @@ fun LoginScreen(
                     is LoginState.Success -> {}
                     is LoginState.Idle -> {}
                 }
+            }
+        } else {
+            // landscape
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // logo kiri
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.login_bg),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo),
+                            contentDescription = null,
+                            modifier = Modifier.size(100.dp),
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Millions of Songs.",
+                            color = Color.White,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                            modifier = Modifier.padding(bottom = 4.dp)
+                        )
+                        Text(
+                            text = "Only on Purrytify.",
+                            color = Color.White,
+                            fontSize = MaterialTheme.typography.headlineMedium.fontSize,
+                        )
+                    }
+                }
 
+                // form kanan
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .weight(1f)
+                        .padding(horizontal = 24.dp)
+                        .padding(vertical = 16.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Email",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
+                    )
+                    EmailTextField(email, onEmailChange = {email = it})
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Password",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 4.dp)
+                    )
+                    PasswordTextField(password, onPasswordChange = { password = it })
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Button(
+                        onClick = {
+                            if (email.isEmpty() || password.isEmpty()) {
+                                Toast.makeText(context, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }else{
+                                viewModel.login(email, password)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Login")
+                    }
+                }
+            }
+
+            when (loginState) {
+                is LoginState.Loading ->
+                    Dialog(onDismissRequest = {}) {
+                        Surface(
+                            modifier = Modifier
+                                .size(150.dp)
+                                .padding(8.dp),
+                            shape = MaterialTheme.shapes.medium,
+                            color = Color.White,
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                is LoginState.Error -> {
+                    val message = (loginState as LoginState.Error).message
+                    AlertDialog(
+                        onDismissRequest = { viewModel.resetLoginState() },
+                        title = { Text("Login Failed") },
+                        text = { Text(message) },
+                        confirmButton = {
+                            Button(onClick = { viewModel.resetLoginState() }) {
+                                Text("OK")
+                            }
+                        }
+                    )
+                }
+                is LoginState.Success -> {}
+                is LoginState.Idle -> {}
             }
         }
-//        else {
-//
-//        }
     }
 }
-
 @Composable
 fun PasswordTextField(password: String, onPasswordChange : (String) -> Unit) {
     var passwordHidden by remember { mutableStateOf(true) }

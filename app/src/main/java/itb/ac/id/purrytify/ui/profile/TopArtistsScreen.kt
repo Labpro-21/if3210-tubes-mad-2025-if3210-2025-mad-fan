@@ -41,11 +41,28 @@ data class TopArtist(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopArtistsScreen(
+    month: String = "",
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val viewModel: SoundCapsuleViewModel = hiltViewModel()
     val analyticsUiState by viewModel.analyticsState.collectAsState()
+
+    // Load analytics for the specific month
+    LaunchedEffect(month) {
+        if (month.isNotEmpty()) {
+            viewModel.loadAnalyticsForMonth(month)
+        }
+    }
+    
+    // Parse month for display
+    val displayMonth = if (month.isNotEmpty()) {
+        viewModel.formatDisplayMonth(month)
+    } else {
+        val currentMonth = YearMonth.now()
+        val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+        currentMonth.format(monthFormatter)
+    }
 
     Column(
         modifier = modifier
@@ -77,11 +94,8 @@ fun TopArtistsScreen(
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            val currentMonth = YearMonth.now()
-            val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
-            
             Text(
-                text = currentMonth.format(monthFormatter),
+                text = displayMonth,
                 color = Color.Gray,
                 fontSize = 14.sp
             )

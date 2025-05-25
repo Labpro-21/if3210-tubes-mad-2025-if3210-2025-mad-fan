@@ -37,13 +37,30 @@ data class DailyListeningData(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimeListenedScreen(
+    month: String = "",
     onBackClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SoundCapsuleViewModel = hiltViewModel()
 ) {
     val analyticsState by viewModel.analyticsState.collectAsState()
-    val currentMonth = YearMonth.now()
-    val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+    
+    // Load analytics for the specific month
+    LaunchedEffect(month) {
+        if (month.isNotEmpty()) {
+            viewModel.loadAnalyticsForMonth(month)
+        }
+    }
+    
+    // Parse month for display
+    val displayMonth = remember(month) {
+        if (month.isNotEmpty()) {
+            viewModel.formatDisplayMonth(month)
+        } else {
+            val currentMonth = YearMonth.now()
+            val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            currentMonth.format(monthFormatter)
+        }
+    }
     
     // map analytics data to menjadi UI
     val dailyData = remember(analyticsState.dailyListening) {
@@ -95,7 +112,7 @@ fun TimeListenedScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Text(
-                text = currentMonth.format(monthFormatter),
+                text = displayMonth,
                 color = Color.Gray,
                 fontSize = 14.sp
             )
@@ -188,7 +205,7 @@ fun TimeListenedScreen(
                         DailyListeningChart(
                             data = dailyData,
                             modifier = Modifier.fillMaxWidth(),
-                            month = currentMonth.format(monthFormatter)
+                            month = displayMonth
                         )
 
                         Spacer(modifier = Modifier.height(16.dp))

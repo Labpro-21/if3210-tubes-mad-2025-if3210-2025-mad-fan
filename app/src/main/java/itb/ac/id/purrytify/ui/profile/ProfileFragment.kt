@@ -133,6 +133,7 @@ fun ProfileContent(
 ) {
     var showEditProfile by remember { mutableStateOf(false) }
     var currentScreen by remember { mutableStateOf("profile") }
+    var selectedMonth by remember { mutableStateOf("") }
     val context = LocalContext.current
     val scrollState = rememberScrollState()
     val configuration = LocalConfiguration.current
@@ -141,18 +142,21 @@ fun ProfileContent(
     when (currentScreen) {
         "timeListened" -> {
             TimeListenedScreen(
+                month = selectedMonth,
                 onBackClick = { currentScreen = "profile" }
             )
             return
         }
         "topArtists" -> {
             TopArtistsScreen(
+                month = selectedMonth,
                 onBackClick = { currentScreen = "profile" }
             )
             return
         }
         "topSongs" -> {
             TopSongsScreen(
+                month = selectedMonth,
                 onBackClick = { currentScreen = "profile" }
             )
             return
@@ -213,9 +217,18 @@ fun ProfileContent(
                             .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
                         SoundCapsuleSection(
-                            onTimeListenedClick = { currentScreen = "timeListened" },
-                            onTopArtistsClick = { currentScreen = "topArtists" },
-                            onTopSongsClick = { currentScreen = "topSongs" },
+                            onTimeListenedClick = { month -> 
+                                selectedMonth = month
+                                currentScreen = "timeListened" 
+                            },
+                            onTopArtistsClick = { month -> 
+                                selectedMonth = month
+                                currentScreen = "topArtists" 
+                            },
+                            onTopSongsClick = { month -> 
+                                selectedMonth = month
+                                currentScreen = "topSongs" 
+                            },
                             onExportClick = {
                                 viewModel.exportAnalytics(context)
                             }
@@ -240,9 +253,18 @@ fun ProfileContent(
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     SoundCapsuleSection(
-                        onTimeListenedClick = { currentScreen = "timeListened" },
-                        onTopArtistsClick = { currentScreen = "topArtists" },
-                        onTopSongsClick = { currentScreen = "topSongs" },
+                        onTimeListenedClick = { month -> 
+                            selectedMonth = month
+                            currentScreen = "timeListened" 
+                        },
+                        onTopArtistsClick = { month -> 
+                            selectedMonth = month
+                            currentScreen = "topArtists" 
+                        },
+                        onTopSongsClick = { month -> 
+                            selectedMonth = month
+                            currentScreen = "topSongs" 
+                        },
                         onExportClick = {
                             viewModel.exportAnalytics(context)
                         }

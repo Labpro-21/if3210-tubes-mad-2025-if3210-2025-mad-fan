@@ -1,5 +1,6 @@
 package itb.ac.id.purrytify.ui.profile
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -36,15 +37,28 @@ data class StreakData(
     val dateRange: String
 )
 
+data class MonthlyDisplayData(
+    val month: String,
+    val displayMonth: String,
+    val minutesListened: Long,
+    val topArtist: String,
+    val topArtistImageId: String?,
+    val topSong: String,
+    val topSongImageId: String?,
+    val hasStreak: Boolean,
+    val streakData: StreakData?
+)
+
 @Composable
 fun SoundCapsuleSection(
     modifier: Modifier = Modifier,
-    onTimeListenedClick: () -> Unit = {},
-    onTopArtistsClick: () -> Unit = {},
-    onTopSongsClick: () -> Unit = {},
+    onTimeListenedClick: (String) -> Unit = {},
+    onTopArtistsClick: (String) -> Unit = {},
+    onTopSongsClick: (String) -> Unit = {},
     onExportClick: () -> Unit = {}
 ) {
     val viewModel: SoundCapsuleViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
     val analyticsUiState by viewModel.analyticsState.collectAsState()
 
     Column(
@@ -74,7 +88,7 @@ fun SoundCapsuleSection(
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (analyticsUiState.isLoading) {
+        if (uiState.isLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -83,65 +97,68 @@ fun SoundCapsuleSection(
             ) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
-        } else if (analyticsUiState.error != null) {
+        } else if (uiState.error != null) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Text(
-                    text = "Unable to load analytics: ${analyticsUiState.error}",
+                    text = "Unable to load analytics: ${uiState.error}",
                     color = Color.Gray,
                     modifier = Modifier.padding(16.dp)
                 )
             }
         } else {
-            // Check apakah empty atau ada data
-            val hasData = analyticsUiState.totalListeningTimeThisMonth > 0 || 
-                         analyticsUiState.topArtists.isNotEmpty() || 
-                         analyticsUiState.topSongs.isNotEmpty()
+            // Display capsule setiap bulan
+            val monthlyDisplayData = uiState.monthlyDisplayData
             
-            if (hasData) {
-                // show data (jika ada data)
-                val currentMonth = YearMonth.now()
-                val monthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())
+            Log.d("SoundCapsule", "Monthly display data size: ${monthlyDisplayData.size}")
+            Log.d("SoundCapsule", "Monthly history size: ${uiState.monthlyHistory.size}")
+            
+            if (monthlyDisplayData.isNotEmpty()) {
+                val sortedData = monthlyDisplayData.sortedByDescending { it.month }
                 
-                MonthlyCapsule(
-                    month = currentMonth.format(monthFormatter),
-                    minutesListened = analyticsUiState.totalListeningTimeThisMonth / 60,
-                    topArtist = analyticsUiState.topArtists.firstOrNull()?.artist ?: "No data",
-                    topArtistImageId = analyticsUiState.topArtists.firstOrNull()?.imagePath,
-                    topSong = analyticsUiState.topSongs.firstOrNull()?.songTitle ?: "No data",
-                    topSongImageId = analyticsUiState.topSongs.firstOrNull()?.imagePath,
-                    hasStreak = analyticsUiState.dayStreaks.isNotEmpty(),
-                    streakData = if (analyticsUiState.dayStreaks.isNotEmpty()) {
-                        val firstStreak = analyticsUiState.dayStreaks.first()
-                        StreakData(
-                            days = firstStreak.streakDays,
-                            songName = firstStreak.songTitle,
-                            artistName = firstStreak.songArtist,
-                            imageId = firstStreak.imagePath,
-                            dateRange = "${firstStreak.startDate} - ${firstStreak.endDate}"
-                        )
-                    } else null,
-                    onTimeListenedClick = onTimeListenedClick,
-                    onTopArtistsClick = onTopArtistsClick,
-                    onTopSongsClick = onTopSongsClick
-                )
+                sortedData.forEach { monthlyData ->
+                    Log.d("SoundCapsule", "Displaying month: ${monthlyData.month} with ${monthlyData.minutesListened} minutes")
+                    MonthlyCapsule(
+                        month = monthlyData.displayMonth,
+                        monthId = monthlyData.month,
+                        minutesListened = monthlyData.minutesListened,
+                        topArtist = monthlyData.topArtist,
+                        topArtistImageId = monthlyData.topArtistImageId,
+                        topSong = monthlyData.topSong,
+                        topSongImageId = monthlyData.topSongImageId,
+                        hasStreak = monthlyData.hasStreak,
+                        streakData = monthlyData.streakData,
+                        onTimeListenedClick = { onTimeListenedClick(monthlyData.month) },
+                        onTopArtistsClick = { onTopArtistsClick(monthlyData.month) },
+                        onTopSongsClick = { onTopSongsClick(monthlyData.month) }
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             } else {
-                // show dummy data jika tidak ada data
-                MonthlyCapsule(
-                    month = "This Month",
-                    minutesListened = 0,
-                    topArtist = "Start listening to music",
-                    topArtistImageId = "",
-                    topSong = "No songs played yet",
-                    topSongImageId = "",
-                    hasStreak = false,
-                    streakData = null,
-                    onTimeListenedClick = onTimeListenedClick,
-                    onTopArtistsClick = onTopArtistsClick,
-                    onTopSongsClick = onTopSongsClick
-                )
+                // no data
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No listening data available",
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "Start listening to music to see your sound capsules!",
+                            color = Color.Gray,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
         }
     }
@@ -150,6 +167,7 @@ fun SoundCapsuleSection(
 @Composable
 fun MonthlyCapsule(
     month: String,
+    monthId: String? = null,
     minutesListened: Long,
     topArtist: String,
     topArtistImageId: String?,
